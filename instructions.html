@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>How to use this tool: </title>
+</head>
+<body>
+<p> First, provide an ESRI polygon shapefile that defines the geographic extent of your design. If your design is stratified, the attribute table for the polygons needs to contain the stratum identity for each polygon. If you are not stratifying, there must be a field in the attribute table with the name of the project. <em>Make sure there are no NULL values in any fields and that there are no polygons that you don't want points in!</em>
+Create a .ZIP that contains <em>all</em> of the files that make up your shapefile (and only those files) and upload it using the button in the left pane.</p>
+<p>
+Once the upload is complete and the server is done processing the file, the name of the .ZIP file will be be suggested as the project name and the fields from the attribute table will be available in the drop down menu labeled <b>Select a stratum field</b>.
+Select the field that contains the stratum identities <em>or</em>, if you are not stratifying, the one with the project name.
+You should also provide a proper name for your project at this point, <em>e.g.</em> "Glassrock Valley Fire Monitoring" or "Coyote Creek Sage-Grouse Habitat"</p>
+<p>After both the name and stratum field are selected, click <b>Update stratum information</b> to continue to the <b>Point Allocation</b> tab.</p>
+<p>The <b>Point Allocation</b> tab is where you tell the tool how to distribute points between your polygons. Most projects use either <em>proportional allocation</em> in which a set number of points will be automatically distributed between the polygons based on their areas or <em>manual allocation</em> in which you specify exactly how many points will be drawn in each stratum. In some cases, you may want <em>equal allocation</em>, in which case every stratum will receive the same number of points.</p>
+<p>Once the design is configured, click the <b>Update point allocation</b> button to submit it.</p>
+<p>Selecting one of the design types will bring up the relevant options for each, including:</p>
+<ul style="list-style: none;">
+    <li><p><b>Panel Names</b>: In all three cases, you need to provide panel names. Panels are just breaking the design into chunks, often used to split a design across multiple years. If you are planning on a single-year design or do not want to break the design into panels, provide just one panel name.</p>
+<p><b>Base Points</b>: Base points are the points that are expected to be sampled over the course of the design.</p>
+<p><b>Base Points Per Panel</b>: The number of base points to allocate to the strata in each panel. If the panels are years, this is effectively the annual sampling effort.</p>
+<p><b>Minimum Base Points Per Stratum Per Panel</b>: If allocating proportionally, every stratum will receive at least this many base points in every panel. Whatever points are left over in the panel after those are assigned are allocated to strata based on their proportional area, <em>e.g.</em> a stratum that makes up 50% of the area will receive 50% of the not-yet-allocated points.</p>
+<p><b>Oversample Points</b>: Effectively "spare" points that can be sampled to make up for base points that end up not being sampled for any reason (safety issues, restricted access, <em>etc.</em>).</p>
+<p><b>Minimum Oversample Points Per Stratum Per Panel</b>: If allocating proportionally or equally, every stratum will receive at least this many oversample points in every panel.</p>
+<p><b>Minimum Oversample Proportion Per Stratum Per Panel</b>: If allocating proportionally or equally, each stratum will get oversample points equal to [number of base points in the stratum]*[minimum oversample proportion], rounded up. If this would mean that a stratum gets fewer than the minimum number of oversample points defined for the design, then that number of points is allocated instead.</p></li>
+</ul>
+
+<p>After the design has been submitted, the <b>Fetch points!</b> button should appear in the left pane. Clicking that will run the design draw points which can be seen in the <b>View Points</b> tab. It will also make the <b>Download points as shapefile</b> button appear in the left pane.</p>
+<p>Clicking <b>Download points as shapefile</b> will download a .ZIP containing:
+The design points as an ESRI shapefile
+The stratification polygons
+An R script containing the code that was used to produce the design points from the polygons and can be used to reproduce them in the future
+</p>
+</body>
+
+
+
+</html>
