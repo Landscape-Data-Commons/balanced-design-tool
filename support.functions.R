@@ -9,9 +9,9 @@ library(spsurvey)
 #'
 #' This function takes a Spatial Polygons Data Frame and calculates and adds area fields to the data frame. Areas can be calculated either treating the whole SPDF as a unit or for each polygon individually.
 #' @param spdf Spatial Polygons Data Frame to calculate areas for
-#' @param area.ha Logical. If \code{T}, areas will be calculated and added in hectares. Default is \code{T}.
-#' @param area.sqkm Logical. If \code{T}, areas will be calculated and added in square kilometers. Default is \code{T}.
-#' @param byid Logical. If \code{T}, areas will be calculated and added for each polygon by ID. If \code{F} the area of the whole SPDF will be calculated and added, so every value for that field will be the same, regardless of polygon ID. Default is \code{T}.
+#' @param area.ha Logical. If \code{TRUE}, areas will be calculated and added in hectares. Default is \code{TRUE}.
+#' @param area.sqkm Logical. If \code{TRUE}, areas will be calculated and added in square kilometers. Default is \code{TRUE}.
+#' @param byid Logical. If \code{TRUE}, areas will be calculated and added for each polygon by ID. If \code{FALSE} the area of the whole SPDF will be calculated and added, so every value for that field will be the same, regardless of polygon ID. Default is \code{TRUE}.
 #' @return The original Spatial Polygons Data Frame with an additional field for each area unit calculated.
 #' @keywords area
 #' @examples
@@ -19,9 +19,9 @@ library(spsurvey)
 #' @export
 
 area.add <- function(spdf,
-                     area.ha = T,
-                     area.sqkm = T,
-                     byid = T
+                     area.ha = TRUE,
+                     area.sqkm = TRUE,
+                     byid = TRUE
 ){
   ## Make sure the SPDF is in Albers equal area projection
   spdf.albers <- sp::spTransform(x = spdf, CRSobj = CRS("+proj=aea"))
@@ -56,34 +56,48 @@ allocate.panels <- function(stratum.sizes,
                             oversample.proportion = 0.25,
                             oversample.min = 3
 ){
-  ## Prep the working frame for the mutates
+  # I cannibalized the following code from a package and so this next line bridges the gap between
+  # legacy stuff in this tool and the code I grabbed
   workingframe <- stratum.sizes
-  workingframe$min <- points.min
-  workingframe$remainder <- panel.sample.size - nrow(workingframe)*points.min
-  workingframe$oversample.proportion <- oversample.proportion
-  workingframe$oversample.min <- oversample.min
-  workingframe$panel.number <- panel.number
-  print(workingframe)
+  
+  # After the minimum points are allocated, how many remain to be allocated?
+  remainder <- panel_sample_size - nrow(workingframe) * points_min
+  # How many panels are there?
+  panel_count <- length(panel_names)
   
   ## Create all the support values then the list that goes into the design object for each stratum
-  workingframe <- workingframe %>% mutate(PROPORTION = AREA/sum(AREA)) %>%
-    mutate(PER.PANEL.BASE = round(PROPORTION*remainder) + min) %>%
-    mutate(PER.PANEL.OVERSAMPLE = pmax(PER.PANEL.BASE*oversample.proportion, oversample.min) %>% ceiling()) %>%
-    mutate(TOTAL.OVERSAMPLE = panel.number*PER.PANEL.OVERSAMPLE)
-  print(workingframe)
+  workingframe[["PROPORTION"]] <- workingframe[["AREA"]] / sum(workingframe[["AREA"]])
+  workingframe[["PER.PANEL.BASE"]] <- round(workingframe[["PROPORTION"]] * remainder) + points_min
+  workingframe[["PER.PANEL.OVERSAMPLE"]] <- ceiling(pmax(workingframe[["PER.PANEL.BASE"]] * oversample_proportion, oversample_min))
+  workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe[["PER.PANEL.OVERSAMPLE"]] * panel_count
+  
+  if (any(working.frame[["PER.PANEL.BASE"]]) < 0) {
+    stop("One or more strata ended up with a negative number of base points allocated. Check to make sure you aren't asking for too many points.")
+  }
+  if (any(working.frame[["TOTAL.OVERSAMPLE"]]) < 0) {
+    stop("One or more strata ended up with a negative number of oversample points allocated. Check to make sure you aren't asking for too many points.")
+  }
   
   ## Create the output design object list.
-  output <- lapply(workingframe$STRATUM,
-                 function(X, workingframe, panel.names) {
-                   list(panel = rep(workingframe$PER.PANEL.BASE[workingframe$STRATUM == X],
-                                             times = workingframe$panel.number[workingframe$STRATUM == X]) %>%
-                          setNames(panel.names),
-                        seltype = "Equal",
-                        over = workingframe$TOTAL.OVERSAMPLE[workingframe$STRATUM == X])
-                 },
-                 workingframe = workingframe,
-                 panel.names = panel.names) %>%
-    setNames(workingframe$STRATUM)
+  output <- lapply(split(workingframe, workingframe[["STRATUM"]]),
+                   panel_names = panel_names,
+                   panel_count = panel_count,
+                   function(X, panel_names, panel_count) {
+                     # Just for clarity because X isn't obvious
+                     df <- X
+                     # Make the list. It's made of a named vector of panel sizes in base point count
+                     list(panel = unlist(stats::setNames(rep(df[1, "PER.PANEL.BASE"],
+                                                             times = panel_count),
+                                                         panel_names)),
+                          # The selection type (always equal here)
+                          seltype = "Equal",
+                          # And total oversample points
+                          over = unname(unlist(df[1, "TOTAL.OVERSAMPLE"])))
+                   })
+  
+  # The list needs to be named by stratum
+  output <- stats::setNames(output,
+                            workingframe[["STRATUM"]])
   
   return(output)
 }
