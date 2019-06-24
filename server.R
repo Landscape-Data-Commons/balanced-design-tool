@@ -1,11 +1,9 @@
-library(tidyverse)
+library(dplyr)
 library(spdplyr)
 library(tools)
 library(shiny)
 library(rgdal)
 library(spsurvey)
-# library(RColorBrewer)
-# library(maptools)
 source('support.functions.r')
 
 # Define server logic
@@ -45,7 +43,9 @@ shinyServer(function(input, output, session) {
                                    selected = input$allocation)
                  updateTextInput(session,
                                  inputId = "projname",
-                                 value = input$uploadzip$name %>% stringr::str_replace(pattern = "\\.(zip)|(ZIP)$", replacement = ""))
+                                 value = stringr::str_replace(input$uploadzip$name,
+                                                              pattern = "\\.(zip)|(ZIP)$",
+                                                              replacement = ""))
                })
   
   ## When the user clicks the button after selecting a stratum field
@@ -76,13 +76,13 @@ shinyServer(function(input, output, session) {
                      print("attempting to remove ui elements")
                      for (id in 1:nrow(temp$ui.lut)) {
                        print(temp$ui.lut$STRATUM[id])
-                       removeUI(selector = paste0("div:has(> #", temp$ui.lut$base[id], ")"), multiple = T, immediate = T)
-                       removeUI(selector = paste0("div:has(> #", temp$ui.lut$over[id], ")"), multiple = T, immediate = T)
+                       removeUI(selector = paste0("div:has(> #", temp$ui.lut$base[id], ")"), multiple = TRUE, immediate = TRUE)
+                       removeUI(selector = paste0("div:has(> #", temp$ui.lut$over[id], ")"), multiple = TRUE, immediate = TRUE)
                      }
                    }
                    
                    ## Build a lookup table of strata and their corresponding inputIds for use later
-                   temp$ui.lut <- temp$spdf@data$STRATUM %>% unique() %>% data.frame(STRATUM = .)
+                   temp$ui.lut <-  data.frame(STRATUM = unique(temp$spdf@data$STRATUM))
                    temp$ui.lut$base <- paste0("manualbase", rownames(temp$ui.lut))
                    temp$ui.lut$over <- paste0("manualover", rownames(temp$ui.lut))
                    
@@ -166,34 +166,42 @@ shinyServer(function(input, output, session) {
   observeEvent(eventExpr = input$allocated,
                handlerExpr = {
                  print(input$allocation)
-                 temp$panels <- input$panelnames %>% stringr::str_split(pattern = ",") %>% unlist() %>% stringr::str_trim() %>% unique()
+                 # This gets a vector of the individual panel names from the string that the user entered
+                 temp$panels <- unique(stringr::str_trim(unlist(stringr::str_split(input$panelnames,
+                                                        pattern = ","))))
                  if (input$allocation == "Manually") {
                    ## Get all the inputs because I can't just slice them out all at once from a reactive list
                    temp$inputs <- c()
                    for (id in c(temp$ui.lut$base, temp$ui.lut$over)) {
                      temp$inputs <- c(temp$inputs, input[[id]])
                    }
-                   temp$inputs <- temp$inputs %>% setNames(c(temp$ui.lut$base, temp$ui.lut$over))
+                   temp$inputs <- setNames(temp$inputs,
+                                           c(temp$ui.lut$base, temp$ui.lut$over))
                    ## Build the design object
                    temp$design <- lapply(temp$ui.lut$STRATUM,
                                          function(X, ui.lut, panel.names, input){
                                            list(
-                                             panel = input[ui.lut$base[ui.lut$STRATUM == X]] %>% rep(times = length(panel.names)) %>% setNames(panel.names),
+                                             panel = setNames(rep(input[ui.lut$base[ui.lut$STRATUM == X]],
+                                                                  times = length(panel.names)),
+                                                              panel.names),
                                              seltype = "Equal",
-                                             over = input[ui.lut$over[ui.lut$STRATUM == X]]*length(panel.names)
+                                             over = input[ui.lut$over[ui.lut$STRATUM == X]] * length(panel.names)
                                            )
                                          },
                                          ui.lut = temp$ui.lut,
                                          panel.names = temp$panels,
                                          input = temp$inputs
-                   ) %>% setNames(temp$ui.lut$STRATUM)
+                   )
+                   temp$design <- setNames(temp$design,
+                                           temp$ui.lut$STRATUM)
                    output$design <- renderText({
                      paste(temp$design)
                    })
                  } else {
                    if (input$allocation == "Proportionally") {
-                     sizes <- temp$spdf@data %>% dplyr::group_by(STRATUM) %>% summarize(AREA = sum(AREA.HA))
-                     sizes %>% str()
+                     sizes <- dplyr::summarize(dplyr::group_by(temp$spdf@data,STRATUM),
+                                               AREA = sum(AREA.HA))
+                     # sizes %>% str()
                      basecount <- input$basecount
                      minbase <- input$minbase
                      minoversample <- input$minoversample
@@ -201,7 +209,8 @@ shinyServer(function(input, output, session) {
                    }
                    if (input$allocation == "Equally") {
                      sizes <- data.frame(STRATUM = temp$spdf@data$STRATUM,
-                                         AREA = temp$spdf@data$STRATUM %>% unique() %>% length() %>% rep(1, times = .))
+                                         AREA = rep(1,
+                                                    times = length(unique(temp$spdf@data$STRATUM))))
                      basecount <- input$basecount
                      minbase <- 0
                      minoversample <- input$minoversample
@@ -231,13 +240,23 @@ shinyServer(function(input, output, session) {
                  temp$strata.panels <- unlist(stringr::str_extract_all(string = temp$design.string,
                                                                        pattern = "panel = c[(]([0-9]|,| ){1,1000}[)]"))
                  for (stratum in temp$strata.panels) {
-                   temp$design.string <- stringr::str_extract_all(string = stratum,
-                                                                  pattern = "[0-9]{1,4}")[[1]] %>%
-                     paste0("'", temp$panels, "'=", .) %>% stringr::str_replace_all(pattern = "\\\"", replacement = "") %>%
-                     paste(collapse = ",") %>% paste0("panel = c(", ., ")") %>%
-                     stringr::str_replace_all(replacement = .,
-                                              string = temp$design.string,
-                                              pattern = stratum %>% stringr::str_replace_all(pattern = "[(]", replacement = "[(]") %>% stringr::str_replace_all(pattern = "[)]", replacement = "[)]"))
+                   # I'll revisit this to make it prettier. Removing the piping was the priority in the meantime
+                   temp$design.string <- stringr::str_replace_all(replacement = paste0("panel = c(",
+                                                                                       paste(stringr::str_replace_all(paste0("'",
+                                                                                                                             temp$panels,
+                                                                                                                             "'=",
+                                                                                                                             stringr::str_extract_all(string = stratum,
+                                                                                                                                                      pattern = "[0-9]{1,4}")[[1]]),
+                                                                                                                      pattern = "\\\"",
+                                                                                                                      replacement = ""),
+                                                                                             collapse = ","),
+                                                                                       ")"),
+                                                                  string = temp$design.string,
+                                                                  pattern = stringr::str_replace_all(stringr::str_replace_all(stratum,
+                                                                                                                              pattern = "[(]",
+                                                                                                                              replacement = "[(]"),
+                                                                                                     pattern = "[)]",
+                                                                                                     replacement = "[)]"))
                  }
                })
   
@@ -245,7 +264,8 @@ shinyServer(function(input, output, session) {
   observeEvent(eventExpr = input$fetch,
                handlerExpr = {
                  if (!is.null(temp$design) & !is.null(temp$spdf)) {
-                   temp$seednum <- runif(ceiling(runif(n = 1, min = 100000, max = 999998)))
+                   temp$seednum <- sample(1:999999)
+                   # temp$seednum <- runif(ceiling(runif(n = 1, min = 100000, max = 999998)))
                    set.seed(temp$seednum)
                    
                    ## Write out the shapefile of the stratification polygons
@@ -257,7 +277,8 @@ shinyServer(function(input, output, session) {
                    
                    ## Construct the script to draw a design with the the current design object
                    ## The first step is copying the script that has the initial content
-                   file.copy(from = paste0(temp$origdir, "/draw_pt1.r"), to = paste0(temp$sessiontempdir, "/sample_script.r"))
+                   file.copy(from = paste0(temp$origdir, "/draw_pt1.r"),
+                             to = paste0(temp$sessiontempdir, "/sample_script.r"))
                    
                    ## This is the metadata section describing the design setup
                    temp$draw_pt2 <- c("# Project Name:",
@@ -274,9 +295,10 @@ shinyServer(function(input, output, session) {
                                       "# Point allocation scheme:",
                                       paste0("# ", input$allocation,
                                              if (input$allocation == "Equally") {
-                                               " between strata"} else if (input$allocation == "Proportionally") {
-                                                 " by stratum areas"
-                                               }),
+                                               " between strata"
+                                             } else if (input$allocation == "Proportionally") {
+                                               " by stratum areas"
+                                             }),
                                       if (input$allocation == "Proportionally") {
                                         c(paste0("# Total number of base points per panel: ", input$basecount),
                                           paste0("# Minimum number of base points per stratum per panel: ", input$minbase),
@@ -358,17 +380,21 @@ shinyServer(function(input, output, session) {
            }
     )
     ## Get the shapefile name
-    temp$shapename <- list.files(dirname(shapes$datapath), pattern = "\\.shp$") %>%
-      stringr::str_replace(pattern = "\\.shp$", replacement = "")
+    temp$shapename <- list.files(dirname(shapes$datapath), pattern = "\\.shp$")
+    temp$shapename <- stringr::str_replace(temp$shapename,
+                                           pattern = "\\.shp$",
+                                           replacement = "")
     ## If there wasn't a shapefile or there was more than one, return NULL
     if (length(temp$shapename) != 1) {
       return(NULL)
     }
     ## Read in the shapefile and add areas
     spdf <- rgdal::readOGR(dsn = dirname(shapes$datapath),
-                           layer = temp$shapename) %>% area.add(area.sqkm = F)
+                           layer = temp$shapename)
+    spdf <- area.add(spdf,
+                     area.sqkm = FALSE)
     ## Store the shapefile location to reference later to read in the shapefiles within spsurvey::grts()
-    temp$shapefile.location <- paste(shapes$directory, temp$shapename, sep = "/")
+    temp$shapefile.location <- paste0(shapes$directory, temp$shapename, sep = "/")
     return(spdf)
   })
   
@@ -446,7 +472,8 @@ shinyServer(function(input, output, session) {
     switch(Sys.info()[["sysname"]],
            Windows = {
              system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe a -tzip results.zip ",
-                           list.files(pattern = "^(results)|(sample_frame)|(sample_script)") %>% paste(collapse = " ")))
+                           paste(list.files(pattern = "^(results)|(sample_frame)|(sample_script)"),
+                                 collapse = " ")))
            },
            Linux = {
              system(paste("zip results %s",
@@ -455,7 +482,7 @@ shinyServer(function(input, output, session) {
     if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "^results\\.(zip)|(ZIP)"))) {
       stop("No valid .zip file called 'results' exists in the directory.")
     }
-    temp$downloadready <- T
+    temp$downloadready <- TRUE
     updateTabsetPanel(session,
                       inputId = "maintabs",
                       selected = "Map")
@@ -466,7 +493,7 @@ shinyServer(function(input, output, session) {
   ## Download handler for the .zip file created by grts.gen()
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste(stringr::str_trim(input$projname), "_results-", Sys.Date() %>% format("%d%m%y"), ".zip")
+      paste(stringr::str_trim(input$projname), "_results-", format(Sys.Date(), "%d%m%y"), ".zip")
     },
     content = function(file) {
       file.copy(paste0(temp$sessiontempdir, "/results.zip"), file)
