@@ -24,7 +24,12 @@ fluidPage(
       conditionalPanel(condition = "input.fetch > 0",
                        downloadButton(outputId = 'downloadData',
                                       label = 'Download Points as shapefile')
-                       )
+                       ),
+      # conditionalPanel(condition = "output.busy == 'yes'",
+                       # img(src='busy.gif', align = "left")
+      # )
+      
+      imageOutput("busy")
     ),
     mainPanel(
       tabsetPanel(

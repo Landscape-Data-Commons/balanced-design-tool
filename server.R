@@ -13,7 +13,8 @@ shinyServer(function(input, output, session) {
   temp <- reactiveValues(placeholder = "placeholder",
                          ## Save what the base working directory is
                          origdir = getwd(),
-                         sessiontempdir = tempdir())
+                         sessiontempdir = tempdir()
+                         )
   
   # allow for wonking big files
   options(shiny.maxRequestSize = 30 * 1024^2)
@@ -23,6 +24,12 @@ shinyServer(function(input, output, session) {
   ## When a valid shapefile-containing .zip gets uploaded, update the inputs that are available
   observeEvent(eventExpr = input$uploadzip,
                handlerExpr = {
+                 # Display the busy gif
+                 output$busy <- renderImage({
+                   list(src = "busy.gif",
+                        contentType = "image/gif",
+                        alt = "BUSY")
+                 })
                  ## Get the directory to work within
                  temp$directory <- gsub(input$uploadzip$datapath,
                                         pattern = "/[0-9]{1,3}$",
@@ -46,11 +53,20 @@ shinyServer(function(input, output, session) {
                                  value = stringr::str_replace(input$uploadzip$name,
                                                               pattern = "\\.(zip)|(ZIP)$",
                                                               replacement = ""))
+                 # Remove the busy gif
+                 output$busy <- renderImage({NULL})
                })
   
   ## When the user clicks the button after selecting a stratum field
   observeEvent(eventExpr = input$submitstratum,
                handlerExpr = {
+                 # Display the busy gif
+                 output$busy <- renderImage({
+                   list(src = "busy.gif",
+                        contentType = "image/gif",
+                        alt = "BUSY")
+                 })
+                 
                  if (input$strataname != "") {
                    ## Add the relevant values to STRATUM
                    temp$spdf@data$STRATUM <- as.character(temp$spdf@data[, input$strataname])
@@ -107,6 +123,8 @@ shinyServer(function(input, output, session) {
                      )
                    }
                  }
+                 # Remove the busy gif
+                 output$busy <- renderImage({NULL})
                })
   
   ## When the user selects a new allocation scheme, as long as it's not blank, jump to the relevant tab
@@ -165,6 +183,9 @@ shinyServer(function(input, output, session) {
   ## When the user clicks the button indicating that they're done with their point allocation, generate a design object
   observeEvent(eventExpr = input$allocated,
                handlerExpr = {
+                 # Display the busy gif
+                 output$busy <- renderText("yes")
+                 
                  print(input$allocation)
                  # This gets a vector of the individual panel names from the string that the user entered
                  temp$panels <- unique(stringr::str_trim(unlist(stringr::str_split(input$panelnames,
@@ -258,11 +279,16 @@ shinyServer(function(input, output, session) {
                                                                                                      pattern = "[)]",
                                                                                                      replacement = "[)]"))
                  }
+                 # Remove the busy gif
+                 output$busy <- renderText("no")
                })
   
   ## When the user clicks the fetch button, generate points from the design object
   observeEvent(eventExpr = input$fetch,
                handlerExpr = {
+                 # Display the busy gif
+                 output$busy <- renderText("yes")
+                 
                  if (!is.null(temp$design) & !is.null(temp$spdf)) {
                    temp$seednum <- sample(1:999999)
                    # temp$seednum <- runif(ceiling(runif(n = 1, min = 100000, max = 999998)))
@@ -334,6 +360,9 @@ shinyServer(function(input, output, session) {
                    temp$points <- grts.gen()
                    
                  }
+                 
+                 # Remove the busy gif
+                 output$busy <- renderText("no")
                })
   
   ## Extracting the contents of a .zip and returning an SPDF of the contents
@@ -447,6 +476,18 @@ shinyServer(function(input, output, session) {
                handlerExpr = {
                  output$pointdata <- renderTable(temp$points@data)
                })
+  
+  # ## Display the busy gif
+  # observeEvent(eventExpr = {temp$busy == "yes"},
+  #              handlerExpr = {
+  #                output$busy <- "yes"
+  #              })
+  # 
+  # ## Remove the busy gif
+  # observeEvent(eventExpr = {temp$busy == "no"},
+  #              handlerExpr = {
+  #                output$busy <- "no"
+  #              })
   
   ## This invokes grts.custom() and both returns and writes out the results
   grts.gen <- reactive({
