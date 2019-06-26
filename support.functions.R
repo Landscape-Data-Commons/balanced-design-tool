@@ -27,7 +27,7 @@ area.add <- function(spdf,
   spdf.albers <- sp::spTransform(x = spdf, CRSobj = CRS("+proj=aea"))
   
   ## Add the area in hectares, stripping the IDs from gArea() output
-  spdf@data$AREA.HA <- rgeos::gArea(spdf.albers, byid = byid) * 0.0001 %>% unname()
+  spdf@data$AREA.HA <- unname(rgeos::gArea(spdf.albers, byid = byid) * 0.0001)
   ## Add the area in square kilometers, converting from hectares
   spdf@data$AREA.SQKM <- spdf@data$AREA.HA * 0.01
   
@@ -61,15 +61,15 @@ allocate.panels <- function(stratum.sizes,
   workingframe <- stratum.sizes
   
   # After the minimum points are allocated, how many remain to be allocated?
-  remainder <- panel_sample_size - nrow(workingframe) * points_min
+  remainder <- panel.sample.size - nrow(workingframe) * points.min
   # How many panels are there?
-  panel_count <- length(panel_names)
+  panel.count <- length(panel.names)
   
   ## Create all the support values then the list that goes into the design object for each stratum
   workingframe[["PROPORTION"]] <- workingframe[["AREA"]] / sum(workingframe[["AREA"]])
-  workingframe[["PER.PANEL.BASE"]] <- round(workingframe[["PROPORTION"]] * remainder) + points_min
-  workingframe[["PER.PANEL.OVERSAMPLE"]] <- ceiling(pmax(workingframe[["PER.PANEL.BASE"]] * oversample_proportion, oversample_min))
-  workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe[["PER.PANEL.OVERSAMPLE"]] * panel_count
+  workingframe[["PER.PANEL.BASE"]] <- round(workingframe[["PROPORTION"]] * remainder) + points.min
+  workingframe[["PER.PANEL.OVERSAMPLE"]] <- ceiling(pmax(workingframe[["PER.PANEL.BASE"]] * oversample.proportion, oversample.min))
+  workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe[["PER.PANEL.OVERSAMPLE"]] * panel.count
   
   if (any(working.frame[["PER.PANEL.BASE"]]) < 0) {
     stop("One or more strata ended up with a negative number of base points allocated. Check to make sure you aren't asking for too many points.")
@@ -80,15 +80,15 @@ allocate.panels <- function(stratum.sizes,
   
   ## Create the output design object list.
   output <- lapply(split(workingframe, workingframe[["STRATUM"]]),
-                   panel_names = panel_names,
-                   panel_count = panel_count,
-                   function(X, panel_names, panel_count) {
+                   panel.names = panel.names,
+                   panel.count = panel.count,
+                   function(X, panel.names, panel.count) {
                      # Just for clarity because X isn't obvious
                      df <- X
                      # Make the list. It's made of a named vector of panel sizes in base point count
                      list(panel = unlist(stats::setNames(rep(df[1, "PER.PANEL.BASE"],
-                                                             times = panel_count),
-                                                         panel_names)),
+                                                             times = panel.count),
+                                                         panel.names)),
                           # The selection type (always equal here)
                           seltype = "Equal",
                           # And total oversample points
@@ -134,7 +134,10 @@ grts.custom <- function(design.object, ## The output from allocate.panels()
   
   ## Last step is to rename the oversample panels so that they're broken up into the years instead of being an oversample chunk
   panel.names <- unique(sample.sites@data$PANEL[!(sample.sites@data$PANEL %in% "OverSamp")])
-  oversample.df <- sample.sites@data[sample.sites@data$PANEL == "OverSamp",] %>% group_by(STRATUM) %>% summarize(oversample.pts.per.panel = floor(n()/length(panel.names)), total.oversample.drawn = n())
+  oversample.df <- dplyr::summarize(dplyr::group_by(sample.sites@data[sample.sites@data$PANEL == "OverSamp",],
+                                                    STRATUM),
+                                    oversample.pts.per.panel = floor(n()/length(panel.names)),
+                                    total.oversample.drawn = n())
   oversample.panels <- list()
   for (s in oversample.df$STRATUM) {
     oversample.count.per.panel <- oversample.df$oversample.pts.per.panel[oversample.df$STRATUM == s]
@@ -159,7 +162,7 @@ grts.custom <- function(design.object, ## The output from allocate.panels()
   }
   
   ## Rename the plots with the strata
-  sample.sites@data$PLOTID <- paste0(sample.sites@data$STRATUM, sample.sites@data$PLOTID %>% stringr::str_extract(pattern = "-[0-9]{1,4}$"))
+  sample.sites@data$PLOTID <- paste0(sample.sites@data$STRATUM, stringr::str_extract(sample.sites@data$PLOTID, pattern = "-[0-9]{1,4}$"))
   
   return(sample.sites)
 }
