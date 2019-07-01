@@ -9,6 +9,9 @@ source('support.functions.r')
 # Define server logic
 shinyServer(function(input, output, session) {
   
+  # This is the id of the current notification (used to tell the user that the server's working on something)
+  # id <- NULL
+  
   ## Initialize temp to work within
   temp <- reactiveValues(placeholder = "placeholder",
                          ## Save what the base working directory is
@@ -229,7 +232,6 @@ shinyServer(function(input, output, session) {
                    if (input$allocation == "Proportionally") {
                      sizes <- dplyr::summarize(dplyr::group_by(temp$spdf@data,STRATUM),
                                                AREA = sum(AREA.HA))
-                     # sizes %>% str()
                      basecount <- input$basecount
                      minbase <- input$minbase
                      minoversample <- input$minoversample
