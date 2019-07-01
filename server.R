@@ -514,12 +514,15 @@ shinyServer(function(input, output, session) {
     switch(Sys.info()[["sysname"]],
            Windows = {
              system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe a -tzip results.zip ",
-                           paste(list.files(pattern = "^(results)|(sample_frame)|(sample_script)"),
+                           paste(list.files(pattern = "(dbf|prj|shp|shx|r)$",
+                                                       ignore.case = TRUE),
                                  collapse = " ")))
            },
            Linux = {
              system(paste("zip results %s",
-                          paste(list.files(pattern = "^(results)|(sample_frame)|(sample_script)"), collapse = " ")))
+                          paste(list.files(pattern = "\\.(dbf|prj|shp|shx|r)$",
+                                           ignore.case = TRUE),
+                                collapse = " ")))
            })
     if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "^results\\.(zip)|(ZIP)"))) {
       stop("No valid .zip file called 'results' exists in the directory.")
