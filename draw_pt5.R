@@ -19,4 +19,4 @@ rgdal::writeOGR(obj = sample.sites,
                 dsn = output.filpath,
                 layer = 'sample_draw',
                 driver = 'ESRI Shapefile',
-                overwrite_layer = T)
+                overwrite_layer = TRUE)
