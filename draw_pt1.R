@@ -27,7 +27,7 @@
 #------------------------------------------------------------------------------------#
 ######################################################################################
 ######################################
-#### 0: Design metadata
+#### 1: Design metadata
 ######################################
 # This is a spatially balanced sample draw using the generalized random tessellation stratified approach as implemented in
 # the R package spsurvey::.
