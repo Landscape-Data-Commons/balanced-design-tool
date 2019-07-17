@@ -28,6 +28,7 @@
 #-- Section 4: Executing the sample draw and writing it out --#
 # This section uses the output filepath from section 1 and should not need to be edited.
 #------------------------------------------------------------------------------------#
+
 ######################################################################################
 ######################################
 #### 1: Design metadata
