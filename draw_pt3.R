@@ -1,5 +1,5 @@
 ######################################
-#### 3: Loading shapefile data
+#### 2: Loading shapefile data
 ######################################
 
 ## This will read in the shapefile called "sample_frame.shp" from the filepath in input.filepath
@@ -8,7 +8,7 @@
 sample.frame <- rgdal::readOGR(dsn = input.filepath, layer = "sample_frame")
 
 ######################################
-#### 4: Building the design object
+#### 3: Building the design object
 ######################################
 
 ## This creates a structured list called design.object. It provides the instructions for the function spsurvey::grts()
