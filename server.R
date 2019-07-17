@@ -109,7 +109,7 @@ shinyServer(function(input, output, session) {
                                    layer = "sample_frame",
                                    driver = "ESRI Shapefile",
                                    overwrite_layer = TRUE)
-                   print(list.files(path = temp$sessiontempdir, pattern = "current"))
+                   print(list.files(path = temp$sessiontempdir, pattern = "sample_frame"))
                    
                    ## Jump to the map, but only if it won't drag the user away from the allocation tab
                    if (!(input$maintabs == "Point Allocation" & input$allocation != "")) {
