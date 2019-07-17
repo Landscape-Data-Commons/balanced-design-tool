@@ -103,6 +103,7 @@ shinyServer(function(input, output, session) {
 
                    
                    ## Write this file out to use in spsurvey::grts()
+                   # This shouldn't be necessary anymore, but I'm afraid to break things I'll have to fix at this point
                    rgdal::writeOGR(obj = temp$spdf[,"STRATUM"],
                                    dsn = temp$sessiontempdir,
                                    layer = "sample_frame",
@@ -495,6 +496,7 @@ shinyServer(function(input, output, session) {
                           in.shape = paste0(temp$sessiontempdir, "/current")
     )
     
+    # I have no idea why this save() call is here
     save(points, file = "sample_draw")
     rgdal::writeOGR(obj = points,
                     dsn = temp$sessiontempdir,
