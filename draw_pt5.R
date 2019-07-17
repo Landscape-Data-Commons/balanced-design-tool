@@ -45,7 +45,7 @@ sample.sites@data$PLOTID <- paste0(sample.sites@data$STRATUM,
 ## This creates a shapefile called "sample_draw.shp" in the filepath in output.filepath.
 ## If there is already a sample_draw.shp in that filepath, it will be overwritten
 rgdal::writeOGR(obj = sample.sites,
-                dsn = output.filpath,
+                dsn = output.filepath,
                 layer = 'sample_draw',
                 driver = 'ESRI Shapefile',
                 overwrite_layer = TRUE)
