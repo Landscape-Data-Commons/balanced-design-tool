@@ -52,9 +52,11 @@ shinyServer(function(input, output, session) {
                                    selected = input$allocation)
                  updateTextInput(session,
                                  inputId = "projname",
-                                 value = stringr::str_replace(input$uploadzip$name,
-                                                              pattern = "\\.(zip)|(ZIP)$",
-                                                              replacement = ""))
+                                 value = gsub(gsub(input$uploadzip$name,
+                                                   pattern = "\\.(zip)|(ZIP)$",
+                                                   replacement = ""),
+                                              pattern = "\\W",
+                                              replacement = ""))
 
                  # Remove the busdy notification
                  removeNotification(id = "busy")
