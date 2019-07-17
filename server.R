@@ -103,7 +103,7 @@ shinyServer(function(input, output, session) {
                    ## Write this file out to use in spsurvey::grts()
                    rgdal::writeOGR(obj = temp$spdf[,"STRATUM"],
                                    dsn = temp$sessiontempdir,
-                                   layer = "current",
+                                   layer = "sample_frame",
                                    driver = "ESRI Shapefile",
                                    overwrite_layer = TRUE)
                    print(list.files(path = temp$sessiontempdir, pattern = "current"))
@@ -482,30 +482,31 @@ shinyServer(function(input, output, session) {
                           in.shape = paste0(temp$sessiontempdir, "/current")
     )
     
-    save(points, file = "results")
+    save(points, file = "sample_draw")
     rgdal::writeOGR(obj = points,
                     dsn = temp$sessiontempdir,
-                    layer = "results",
+                    layer = "sample_draw",
                     driver = "ESRI Shapefile",
                     overwrite_layer = TRUE)
     
-    if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "results"))) {
-      stop("No shapefile called 'results' exists in the directory.")
+    if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "sample_draw.shp"))) {
+      stop("No shapefile called 'sample_draw' exists in the directory.")
     }
     
     ## Create a .zip fle in case user wants the points, which depends on a system call
     setwd(temp$sessiontempdir)
+    files_to_zip <- list.files(pattern = "^(sample_frame|sample_draw|sample_script)\\.(dbf|prj|shp|shx|r)$",
+                               ignore.case = TRUE)
+    files_to_zip <- files_to_zip[!grepl(files_to_zip, pattern = "^current")]
     switch(Sys.info()[["sysname"]],
            Windows = {
              system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe a -tzip results.zip ",
-                           paste(list.files(pattern = "(dbf|prj|shp|shx|r)$",
-                                                       ignore.case = TRUE),
+                           paste(files_to_zip,
                                  collapse = " ")))
            },
            Linux = {
              system(paste("zip results %s",
-                          paste(list.files(pattern = "\\.(dbf|prj|shp|shx|r)$",
-                                           ignore.case = TRUE),
+                          paste(files_to_zip,
                                 collapse = " ")))
            })
     if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "^results\\.(zip)|(ZIP)"))) {
