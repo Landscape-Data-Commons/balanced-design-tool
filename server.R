@@ -513,9 +513,6 @@ shinyServer(function(input, output, session) {
       stop("No valid .zip file called 'results' exists in the directory.")
     }
     temp$downloadready <- TRUE
-    updateTabsetPanel(session,
-                      inputId = "maintabs",
-                      selected = "Map")
     setwd(temp$origdir)
     return(points)
   })
