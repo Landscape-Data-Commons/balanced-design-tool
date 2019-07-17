@@ -9,10 +9,6 @@ source('support.functions.r')
 
 # Define server logic
 shinyServer(function(input, output, session) {
-  
-  # This is the id of the current notification (used to tell the user that the server's working on something)
-  # id <- NULL
-  
   ## Initialize temp to work within
   temp <- reactiveValues(placeholder = "placeholder",
                          ## Save what the base working directory is
