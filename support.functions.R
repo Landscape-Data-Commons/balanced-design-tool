@@ -24,7 +24,8 @@ area.add <- function(spdf,
                      byid = TRUE
 ){
   ## Make sure the SPDF is in Albers equal area projection
-  spdf.albers <- sp::spTransform(x = spdf, CRSobj = CRS("+proj=aea"))
+  spdf.albers <- sp::spTransform(x = spdf,
+                                 CRSobj = CRS("+proj=aea"))
   
   ## Add the area in hectares, stripping the IDs from gArea() output
   spdf@data$AREA.HA <- unname(rgeos::gArea(spdf.albers, byid = byid) * 0.0001)
