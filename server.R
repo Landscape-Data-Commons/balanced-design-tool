@@ -74,6 +74,32 @@ shinyServer(function(input, output, session) {
                    ## Add the relevant values to STRATUM
                    temp$spdf@data$STRATUM <- as.character(temp$spdf@data[, input$strataname])
                    
+                   # This bit is shamelessly stolen from another one of my packages
+                   # It'll dissolve the polygons by strata if they aren't already
+                   unique_ids <- as.character(unique(temp$spdf@data[["STRATUM"]]))
+                   if (length(unique_ids) > nrow(temp$spdf@data)) {
+                     poly_list <- lapply(X = unique_ids,
+                                         spdf = temp$spdf,
+                                         dissolve_field = "STRATUM",
+                                         FUN = function(X, spdf, dissolve_field){
+                                           spdf_current <- spdf[spdf@data[[dissolve_field]] == X, ]
+                                           spdf_current <- methods::as(sf::st_combine(sf::st_as_sf(spdf_current)), "Spatial")
+                                           df <- data.frame(id = X,
+                                                            stringsAsFactors = FALSE)
+                                           names(df) <- dissolve_field
+                                           rownames(df) <- spdf_current@polygons[[1]]@ID
+                                           spdf_current <- sp::SpatialPolygonsDataFrame(Sr = spdf_current,
+                                                                                        data = df)
+                                           return(spdf_current)
+                                         })
+                     temp$spdf <- do.call(rbind,
+                                          poly_list)
+                     
+                     temp$spdf <- area.add(temp$spdf,
+                                           area.sqkm = FALSE)
+                   }
+
+                   
                    ## Write this file out to use in spsurvey::grts()
                    rgdal::writeOGR(obj = temp$spdf[,"STRATUM"],
                                    dsn = temp$sessiontempdir,
