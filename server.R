@@ -445,45 +445,6 @@ shinyServer(function(input, output, session) {
     list(input$strataname, input$updatemap, temp$points)
   })
   
-  ## Update the map
-  # observeEvent(eventExpr = listen.map,
-  #              handlerExpr = {
-  #                print(names(temp))
-  #                output$map <- renderPlot(
-  #                  height = input$mapsize,
-  #                  {
-  #                    if (is.null(temp$spdf)) {
-  #                      return(NULL)
-  #                    }
-  #                    ## Keep isolated so that warnings don't prevent the tool continuing
-  #                    isolate({
-  #                      ## Getting boundaries
-  #                      bounds <- bbox(temp$spdf)[1:4]
-  #                      
-  #                      plot.strata <- spplot(obj = temp$spdf,
-  #                                            zcol = c("STRATUM"),
-  #                                            xlim = c(bounds[1], bounds[3]),
-  #                                            ylim = c(bounds[2], bounds[4]),
-  #                                            col.regions = temp$spdf@data$STRATUM %>% as.factor() %>% nlevels() %>% terrain.colors())
-  #                      
-  #                      
-  #                      if (!is.null(temp$points)) {
-  #                        oversample <- temp$points %>% dplyr::filter(grepl(x = PANEL, pattern = "Oversample")) %>% dplyr::select(xcoord, ycoord, STRATUM)
-  #                        base <- temp$points %>% dplyr::filter(!grepl(x = PANEL, pattern = "Oversample")) %>% dplyr::select(xcoord, ycoord, STRATUM)
-  #                        plot.oversample <- spplot(obj = oversample,
-  #                                                  zcol = c("STRATUM"),
-  #                                                  col.regions = "red")
-  #                        plot.base <- spplot(obj = base,
-  #                                            zcol = c("STRATUM"),
-  #                                            col.regions = "black")
-  #                        print(plot.strata + plot.oversample + plot.base)
-  #                      } else {
-  #                        print(plot.strata)
-  #                      }
-  #                    })
-  #                  })
-  #              })
-  
   ## Update the points table
   observeEvent(eventExpr = temp$points,
                handlerExpr = {
