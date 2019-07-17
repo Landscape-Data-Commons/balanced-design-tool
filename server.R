@@ -336,7 +336,7 @@ shinyServer(function(input, output, session) {
                                   type = "warning")
                  
                  if (!is.null(temp$design) & !is.null(temp$spdf)) {
-                   temp$seednum <- sample(1:999999)
+                   temp$seednum <- sample(1:999999, size = 1)
                    # temp$seednum <- runif(ceiling(runif(n = 1, min = 100000, max = 999998)))
                    set.seed(temp$seednum)
                    
