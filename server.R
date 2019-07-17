@@ -496,11 +496,12 @@ shinyServer(function(input, output, session) {
   ## This invokes grts.custom() and both returns and writes out the results
   grts.gen <- reactive({
 
-    points <- grts.custom(design.object = temp$design,
-                          design.name = gsub(input$projname,
+    points <- grts.custom(design_object = temp$design,
+                          design_name = gsub(input$projname,
                                              pattern = "\\W",
                                              replacement = ""),
-                          in.shape = paste0(temp$sessiontempdir, "/current")
+                          sp_object = temp$spdf,
+                          seed_number = temp$seednum
     )
     
     # I have no idea why this save() call is here
