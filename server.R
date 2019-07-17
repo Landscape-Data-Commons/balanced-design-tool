@@ -223,6 +223,13 @@ shinyServer(function(input, output, session) {
                  # This gets a vector of the individual panel names from the string that the user entered
                  temp$panels <- unique(stringr::str_trim(unlist(stringr::str_split(input$panelnames,
                                                         pattern = ","))))
+                 
+                 # Sanitize the panel names
+                 temp$panels <- sapply(temp$panels,
+                                       gsub,
+                                       pattern = "\\W",
+                                       replacement = "")
+                 
                  if (input$allocation == "Manually") {
                    ## Get all the inputs because I can't just slice them out all at once from a reactive list
                    temp$inputs <- c()
@@ -344,7 +351,9 @@ shinyServer(function(input, output, session) {
                    
                    ## This is the metadata section describing the design setup
                    temp$draw_pt2 <- c("# Project Name:",
-                                      paste0("project.name <- ", input$projname),
+                                      paste0("project.name <- ", gsub(input$projname,
+                                                                      pattern = "\\W",
+                                                                      replacement = "")),
                                       "",
                                       "# Original stratification shapefile name:",
                                       paste0("# ", temp$shapename),
@@ -476,9 +485,11 @@ shinyServer(function(input, output, session) {
   
   ## This invokes grts.custom() and both returns and writes out the results
   grts.gen <- reactive({
-    
+
     points <- grts.custom(design.object = temp$design,
-                          design.name = input$projname,
+                          design.name = gsub(input$projname,
+                                             pattern = "\\W",
+                                             replacement = ""),
                           in.shape = paste0(temp$sessiontempdir, "/current")
     )
     
@@ -520,7 +531,12 @@ shinyServer(function(input, output, session) {
   ## Download handler for the .zip file created by grts.gen()
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste0(stringr::str_trim(input$projname), "_results_", format(Sys.Date(), "%Y%m%d"), ".zip")
+      paste0(gsub(input$projname,
+                  pattern = "\\W",
+                  replacement = ""),
+             "_results_",
+             format(Sys.Date(), "%Y%m%d"),
+             ".zip")
     },
     content = function(file) {
       file.copy(paste0(temp$sessiontempdir, "/results.zip"), file)
