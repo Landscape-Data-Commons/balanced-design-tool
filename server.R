@@ -499,7 +499,7 @@ shinyServer(function(input, output, session) {
   ## Download handler for the .zip file created by grts.gen()
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste(stringr::str_trim(input$projname), "_results-", format(Sys.Date(), "%d%m%y"), ".zip")
+      paste0(stringr::str_trim(input$projname), "_results_", format(Sys.Date(), "%Y%m%d"), ".zip")
     },
     content = function(file) {
       file.copy(paste0(temp$sessiontempdir, "/results.zip"), file)
