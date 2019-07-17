@@ -1,7 +1,7 @@
 library(shiny)
 
 fluidPage(
-  # This changes the position of the notification
+  # This changes the position and styling of the notification
   tags$head(
     tags$style(
       HTML(
