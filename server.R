@@ -347,10 +347,12 @@ shinyServer(function(input, output, session) {
                                    driver = "ESRI Shapefile",
                                    overwrite_layer = TRUE)
                    
+                   
                    ## Construct the script to draw a design with the the current design object
                    ## The first step is copying the script that has the initial content
                    file.copy(from = paste0(temp$origdir, "/draw_pt1.r"),
-                             to = paste0(temp$sessiontempdir, "/sample_script.r"))
+                             to = paste0(temp$sessiontempdir, "/sample_script.r"),
+                             overwrite = TRUE)
                    
                    ## This is the metadata section describing the design setup
                    temp$draw_pt2 <- c("# Project Name:",
