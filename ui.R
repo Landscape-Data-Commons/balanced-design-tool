@@ -81,16 +81,6 @@ fluidPage(
                  includeHTML("instructions.html"),
                  HTML('<img style="float: right"; src="JornadaLogo_1.png"/>')
         ),
-        # tabPanel(title = "Map",   
-        #          numericInput(inputId = "mapsize",
-        #                       label = "Enter desired map height in pixels (200-1000):",
-        #                       min = 200,
-        #                       max = 1000,
-        #                       value = 400),
-        #          actionButton(inputId = "updatemap",
-        #                       label = "Update map"),
-        #          plotOutput(outputId = "map")
-        # ),
         
         tabPanel(title = "Point Allocation",
                  column(width = 6,
