@@ -397,16 +397,19 @@ shinyServer(function(input, output, session) {
                                       paste0("seed.number <- ", temp$seednum),
                                       ""
                    )
+
+                   temp$draw_pt3 <- readLines(paste0(temp$origdir, "/draw_pt3.r"))
                    
-                   temp$draw.pt3 <- readLines(paste0(temp$origdir, "/draw_pt3.r"))
-                   
-                   temp$draw.pt4 <- c("",
+                   temp$draw_pt4 <- c("",
                                       paste0("design.object <- list(", temp$design.string,")"))
                    
-                   temp$draw.pt5 <- readLines(paste0(temp$origdir, "/draw_pt5.r"))
+                   temp$draw_pt5 <- readLines(paste0(temp$origdir, "/draw_pt5.r"))
                    
                    ## Append the script components to the copy of sample_script.r
-                   cat(c(temp$draw.pt2, temp$draw.pt3, temp$draw.pt4, temp$draw.pt5), file = paste0(temp$sessiontempdir, "/sample_script.r"), sep = "\n", append = T)
+                   cat(c(temp$draw_pt2, temp$draw_pt3, temp$draw_pt4, temp$draw_pt5),
+                       file = paste0(temp$sessiontempdir, "/sample_script.r"),
+                       sep = "\n",
+                       append = TRUE)
                    
                    ## Generate the points
                    temp$points <- grts.gen()
