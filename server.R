@@ -356,9 +356,11 @@ shinyServer(function(input, output, session) {
                    
                    ## This is the metadata section describing the design setup
                    temp$draw_pt2 <- c("# Project Name:",
-                                      paste0("project.name <- ", gsub(input$projname,
-                                                                      pattern = "\\W",
-                                                                      replacement = "")),
+                                      paste0("project.name <- '",
+                                             gsub(input$projname,
+                                                  pattern = "\\W",
+                                                  replacement = ""),
+                                             "'"),
                                       "",
                                       "# Original stratification shapefile name:",
                                       paste0("# ", temp$shapename),
