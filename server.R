@@ -4,6 +4,7 @@ library(tools)
 library(shiny)
 library(rgdal)
 library(spsurvey)
+library(sf)
 source('support.functions.r')
 
 # Define server logic
