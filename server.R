@@ -552,7 +552,7 @@ shinyServer(function(input, output, session) {
     setwd(temp$sessiontempdir)
     files_to_zip <- list.files(pattern = "^(sample_frame|sample_draw|sample_script)\\.(dbf|prj|shp|shx|r)$",
                                ignore.case = TRUE)
-    files_to_zip <- files_to_zip[!grepl(files_to_zip, pattern = "^current")]
+
     switch(Sys.info()[["sysname"]],
            Windows = {
              system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe a -tzip results.zip ",
