@@ -1,9 +1,9 @@
-library(tidyverse)
-library(spdplyr)
-library(tools)
-library(shiny)
-library(rgdal)
-library(spsurvey)
+# library(tidyverse)
+# library(spdplyr)
+# library(tools)
+# library(shiny)
+# library(rgdal)
+# library(spsurvey)
 
 #' Add areas to a Spatial Polygons Data Frame
 #'
