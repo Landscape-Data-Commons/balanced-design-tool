@@ -36,8 +36,13 @@ shinyServer(function(input, output, session) {
                                         pattern = "/\\d{1,3}$",
                                         replacement = "")
                  temp$spdf <- shape.extract()
-                 if (is.null(temp$spdf)) {
-                   fieldnames <- "No valid single shapefile found"
+                 if (is.null(temp$spdf) | !(class(temp$spdf) %in% c("SpatialPolygonsDataFrame"))) {
+                   showNotification(ui = "No single valid polygon shapefile found. Check the uploaded .zip file to make sure it only contains one polygon shapefile",
+                                    duration = NULL,
+                                    closeButton = TRUE,
+                                    id = "spdferror",
+                                    type = "warning")
+                   # fieldnames <- "No valid single shapefile found"
                  } else {
                    fieldnames <- names(temp$spdf@data)
                  }
