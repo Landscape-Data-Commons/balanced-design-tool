@@ -59,10 +59,12 @@ fluidPage(
       conditionalPanel(condition = "input.strataname != ''",
                        actionButton(inputId = "submitstratum",
                                     label = "Update stratum information")),
+      # The empty string is just to take up space and buffer the buttons
       helpText(""),
       conditionalPanel(condition = "input.allocated > 0",
                        actionButton(inputId = "fetch",
                                     label = "Fetch points!")),
+      # The empty string is just to take up space and buffer the buttons
       helpText(""),
       conditionalPanel(condition = "input.fetch > 0",
                        downloadButton(outputId = 'downloadData',
