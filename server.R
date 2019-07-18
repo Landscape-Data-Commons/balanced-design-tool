@@ -465,18 +465,30 @@ shinyServer(function(input, output, session) {
              setwd(temp$origdir)
            }
     )
-    temp$shapename <- list.files(dirname(shapes$datapath), pattern = "\\.shp$")
-    temp$shapename <- stringr::str_replace(temp$shapename,
-                                           pattern = "\\.shp$",
-                                           replacement = "")
     # Get the shapefile name
+    extracted_files <- list.files(dirname(shapes$datapath))
+    temp$shapename <- extracted_files[grepl(extracted_files, pattern = "\\.shp$", ignore.case = TRUE)]
+    temp$shapename <- gsub(temp$shapename,
+                           pattern = "\\.shp$",
+                           replacement = "")
+    
+    # Are there all the necessary components of a shapefile?
+    shapefile_components <- extracted_files[grepl(extracted_files,
+                                                  pattern = paste0("^", temp$shapename, "\\.(dbf|DBF|prj|PRJ|shp|SHP|shx|SHX)$"),
+                                                  ignore.case = TRUE)]
+
     # If there wasn't a shapefile or there was more than one, return NULL
     if (length(temp$shapename) != 1) {
       return(NULL)
     }
+    # Does
+    if (length(shapefile_components) != 4) {
+      return(NULL)
+    }
+    
     # Read in the FIRST shapefile and add areas. Too bad if they included more than one!
     spdf <- rgdal::readOGR(dsn = dirname(shapes$datapath),
-                           layer = temp$shapename)
+                           layer = temp$shapename[1])
     spdf <- area.add(spdf,
                      area.sqkm = FALSE)
 
