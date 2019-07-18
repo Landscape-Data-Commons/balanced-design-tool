@@ -379,22 +379,22 @@ shinyServer(function(input, output, session) {
                                              } else if (input$allocation == "Proportionally") {
                                                " by stratum areas"
                                              }),
-                                      if (input$allocation == "Proportionally") {
-                                        c(paste0("# Total number of base points per panel: ", input$basecount),
-                                          paste0("# Minimum number of base points per stratum per panel: ", input$minbase),
-                                          paste0("# Minimum number of oversample points per stratum per panel: ", input$minoversample),
-                                          paste0("# Minimum ratio of oversample:base points per stratum per panel: ", input$minoversampleproportion),
-                                          ""
-                                        )
-                                      } else if (input$allocation == "Equally") {
-                                        c(paste0("# Total number of base points per panel: ", input$basecount),
-                                          paste0("# Minimum number of oversample points per stratum per panel: ", input$minoversample),
-                                          paste0("# Minimum ratio of oversample:base points per stratum per panel: ", input$minoversampleproportion),
-                                          "")
-                                      } else if (input$allocation == "Manually") {
-                                        c("# See the design object construction in section 4 for details on point allocation.",
-                                          "")
-                                      },
+                                      switch(input$allocation,
+                                             "Proportionally" = {
+                                               c(paste0("# Total number of base points per panel: ", input$basecount),
+                                                 paste0("# Minimum number of base points per stratum per panel: ", input$minbase),
+                                                 paste0("# Minimum number of oversample points per stratum per panel: ", input$minoversample),
+                                                 paste0("# Minimum ratio of oversample:base points per stratum per panel: ", input$minoversampleproportion),
+                                                 "")
+                                             },
+                                             "Equally" = {
+                                               c(paste0("# Total number of base points per panel: ", input$basecount),
+                                                 paste0("# Minimum number of oversample points per stratum per panel: ", input$minoversample),
+                                                 paste0("# Minimum ratio of oversample:base points per stratum per panel: ", input$minoversampleproportion),
+                                                 "")
+                                             },
+                                             "Manually" = { c("# See the design object construction in section 3 for details on point allocation.",
+                                                              "")}),
                                       "# Seed number used during sample draw:",
                                       paste0("seed.number <- ", temp$seednum),
                                       ""
