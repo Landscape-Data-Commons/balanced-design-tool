@@ -429,8 +429,10 @@ shinyServer(function(input, output, session) {
     if (is.null(shapes)) {
       return(NULL)
     } 
-    if (!grepl(pattern = "\\.(zip)|(ZIP)$", shapes$name)) {
     # If the input file is not a zip file
+    if (!grepl(shapes$name,
+               pattern = "\\.zip$",
+               ignore.case = TRUE)) {
       return(NULL)
     }
     print("File exists and ends in .zip")
