@@ -82,7 +82,11 @@ fluidPage(
                         selectInput(inputId = "allocation",
                                     label = "Allocate points proportionally by strata areas, equally across strata, or manually:",
                                     choices = c(""),
-                                    selected = "")
+                                    selected = ""),
+                        numericInput(inputId = "seednum",
+                                     label = "Seed number for reproducibility:",
+                                     value = 420,
+                                     min = 0)
                         ),
                  column(width = 4,
                         conditionalPanel(condition = "input.panelnames == '' && input.allocation != ''",

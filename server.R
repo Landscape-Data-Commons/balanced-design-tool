@@ -353,9 +353,9 @@ shinyServer(function(input, output, session) {
                                   type = "warning")
                  
                  if (!is.null(temp$design) & !is.null(temp$spdf)) {
-                   temp$seednum <- sample(1:999999, size = 1)
-                   # temp$seednum <- runif(ceiling(runif(n = 1, min = 100000, max = 999998)))
-                   set.seed(temp$seednum)
+                   # temp$seednum <- sample(1:999999, size = 1)
+                   
+                   set.seed(input$seednum)
                    
                    # Write out the shapefile of the stratification polygons
                    # This is done when the stratum variable is selected, so this should be redundant??????
@@ -413,7 +413,7 @@ shinyServer(function(input, output, session) {
                                              "Manually" = { c("# See the design object construction in section 3 for details on point allocation.",
                                                               "")}),
                                       "# Seed number used during sample draw:",
-                                      paste0("seed.number <- ", temp$seednum),
+                                      paste0("seed.number <- ", input$seednum),
                                       ""
                    )
 
@@ -533,7 +533,7 @@ shinyServer(function(input, output, session) {
                                              pattern = "\\W",
                                              replacement = ""),
                           sp_object = temp$spdf,
-                          seed_number = temp$seednum
+                          seed_number = input$seednum
     )
     
     # I have no idea why this save() call is here
