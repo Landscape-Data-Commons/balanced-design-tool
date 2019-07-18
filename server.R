@@ -251,21 +251,28 @@ shinyServer(function(input, output, session) {
                                            c(temp$ui.lut$base, temp$ui.lut$over))
                    # Build the design object
                    temp$design <- lapply(temp$ui.lut$STRATUM,
-                                         function(X, ui.lut, panel.names, input){
-                                           list(
-                                             panel = setNames(rep(input[ui.lut$base[ui.lut$STRATUM == X]],
-                                                                  times = length(panel.names)),
-                                                              panel.names),
-                                             seltype = "Equal",
-                                             over = input[ui.lut$over[ui.lut$STRATUM == X]] * length(panel.names)
-                                           )
-                                         },
                                          ui.lut = temp$ui.lut,
                                          panel.names = temp$panels,
-                                         input = temp$inputs
-                   )
+                                         input = temp$inputs,
+                                         function(X, ui.lut, panel.names, input){
+                                           # How many panels?
+                                           panel_count <- length(panel.names)
+                                           # Get those counts
+                                           base_counts <- rep(input[ui.lut$base[ui.lut$STRATUM == X]],
+                                                              times = panel_count)
+                                           # Oversample count
+                                           over_count <- input[ui.lut$over[ui.lut$STRATUM == X]] * length(panel.names)
+                                           
+                                           list(panel = setNames(base_counts,
+                                                                 panel.names),
+                                                seltype = "Equal",
+                                                over = over_count)
+                                         })
+                   
+                   # Set the names of that list
                    temp$design <- setNames(temp$design,
                                            temp$ui.lut$STRATUM)
+                   
                    output$design <- renderText({
                      paste(temp$design)
                    })
