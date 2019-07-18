@@ -11,7 +11,7 @@ source('support.functions.r')
 shinyServer(function(input, output, session) {
   # Initialize temp to work within
   temp <- reactiveValues(placeholder = "placeholder",
-                         ## Save what the base working directory is
+                         # Save what the base working directory is
                          origdir = getwd(),
                          sessiontempdir = tempdir()
                          )
