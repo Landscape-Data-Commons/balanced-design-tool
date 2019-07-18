@@ -294,9 +294,9 @@ shinyServer(function(input, output, session) {
                  # Create a string version of the design object to write out
                  temp$design.string <- paste(paste0("'",
                                                     names(temp$design), "' = ",
-                                                    stringr::str_replace_all(string = paste0(as.character(temp$design)),
-                                                                             pattern = "\\\"",
-                                                                             replacement = "'")),
+                                                    gsub(paste0(as.character(temp$design)),
+                                                         pattern = "\\\"",
+                                                         replacement = "'")),
                                              collapse = ",")
                  
                  # Add the panel names to temp$design.string because they were lost in the process
@@ -304,22 +304,24 @@ shinyServer(function(input, output, session) {
                                                                        pattern = "panel = c[(]([0-9]|,| ){1,1000}[)]"))
                  for (stratum in temp$strata.panels) {
                    # I'll revisit this to make it prettier. Removing the piping was the priority in the meantime
-                   temp$design.string <- stringr::str_replace_all(replacement = paste0("panel = c(",
-                                                                                       paste(stringr::str_replace_all(paste0("'",
-                                                                                                                             temp$panels,
-                                                                                                                             "'=",
-                                                                                                                             stringr::str_extract_all(string = stratum,
-                                                                                                                                                      pattern = "[0-9]{1,4}")[[1]]),
-                                                                                                                      pattern = "\\\"",
-                                                                                                                      replacement = ""),
-                                                                                             collapse = ","),
-                                                                                       ")"),
-                                                                  string = temp$design.string,
-                                                                  pattern = stringr::str_replace_all(stringr::str_replace_all(stratum,
-                                                                                                                              pattern = "[(]",
-                                                                                                                              replacement = "[(]"),
-                                                                                                     pattern = "[)]",
-                                                                                                     replacement = "[)]"))
+                   # Given that this works, I'm disinclined to touch it anymore
+                   # The point is that it makes a version of the design object that can be pasted into the output sample_script.R and Just Work(TM)
+                   temp$design.string <- gsub(temp$design.string,
+                                              pattern = gsub(gsub(stratum,
+                                                                  pattern = "[(]",
+                                                                  replacement = "[(]"),
+                                                             pattern = "[)]",
+                                                             replacement = "[)]"),
+                                              replacement = paste0("panel = c(",
+                                                                   paste(gsub(paste0("'",
+                                                                                     temp$panels,
+                                                                                     "'=",
+                                                                                     stringr::str_extract_all(string = stratum,
+                                                                                                              pattern = "\\d{1,4}")[[1]]),
+                                                                              pattern = "\\\"",
+                                                                              replacement = ""),
+                                                                         collapse = ","),
+                                                                   ")"))
                  }
                  # Remove the busy notification
                  removeNotification(id = "busy")
