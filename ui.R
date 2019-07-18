@@ -61,12 +61,10 @@ fluidPage(
                                     label = "Update stratum information")),
       conditionalPanel(condition = "input.allocated > 0",
                        actionButton(inputId = "fetch",
-                                    label = "Fetch points!")
-      ),
+                                    label = "Fetch points!")),
       conditionalPanel(condition = "input.fetch > 0",
                        downloadButton(outputId = 'downloadData',
-                                      label = 'Download Points as shapefile')
-                       )
+                                      label = 'Download Points as shapefile'))
     ),
     mainPanel(
       tabsetPanel(
