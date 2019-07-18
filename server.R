@@ -15,7 +15,7 @@ shinyServer(function(input, output, session) {
                          # Save what the base working directory is
                          origdir = getwd(),
                          sessiontempdir = tempdir()
-                         )
+  )
   
   # Allow for wonking big files
   options(shiny.maxRequestSize = 30 * 1024^2)
@@ -31,7 +31,7 @@ shinyServer(function(input, output, session) {
                                   closeButton = FALSE,
                                   id = "busy",
                                   type = "warning")
-
+                 
                  # Get the directory to work within
                  temp$directory <- gsub(input$uploadzip$datapath,
                                         pattern = "/\\d{1,3}$",
@@ -62,7 +62,7 @@ shinyServer(function(input, output, session) {
                                                    replacement = ""),
                                               pattern = "\\W",
                                               replacement = ""))
-
+                 
                  # Remove the busdy notification
                  removeNotification(id = "busy")
                })
@@ -109,7 +109,7 @@ shinyServer(function(input, output, session) {
                      temp$spdf <- area.add(temp$spdf,
                                            area.sqkm = FALSE)
                    }
-
+                   
                    
                    # Write this file out to use in spsurvey::grts()
                    # This shouldn't be necessary anymore, but I'm afraid to break things I'll have to fix at this point
@@ -234,8 +234,8 @@ shinyServer(function(input, output, session) {
                  print(input$allocation)
                  # This gets a vector of the individual panel names from the string that the user entered
                  temp$panels <- unique(stringr::str_trim(unlist(stringr::str_split(input$panelnames,
-                                                        pattern = ","))))
-                 
+                                                                                   pattern = ","))))
+                 message(temp$panels)
                  # Sanitize the panel names
                  temp$panels <- sapply(temp$panels,
                                        gsub,
@@ -417,7 +417,7 @@ shinyServer(function(input, output, session) {
                                       paste0("seed.number <- ", input$seednum),
                                       ""
                    )
-
+                   
                    temp$draw_pt3 <- readLines(paste0(temp$origdir, "/draw_pt3.r"))
                    
                    temp$draw_pt4 <- c("",
@@ -496,7 +496,7 @@ shinyServer(function(input, output, session) {
     shapefile_components <- extracted_files[grepl(extracted_files,
                                                   pattern = paste0("^", temp$shapename, "\\.(dbf|DBF|prj|PRJ|shp|SHP|shx|SHX)$"),
                                                   ignore.case = TRUE)]
-
+    
     # If there wasn't a shapefile or there was more than one, return NULL
     if (length(temp$shapename) != 1) {
       return(NULL)
@@ -553,7 +553,7 @@ shinyServer(function(input, output, session) {
     setwd(temp$sessiontempdir)
     files_to_zip <- list.files(pattern = "^(sample_frame|sample_draw|sample_script)\\.(dbf|prj|shp|shx|r)$",
                                ignore.case = TRUE)
-
+    
     switch(Sys.info()[["sysname"]],
            Windows = {
              system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe a -tzip results.zip ",
