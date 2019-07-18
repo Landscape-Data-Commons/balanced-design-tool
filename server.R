@@ -1,6 +1,7 @@
 library(dplyr)
 library(spdplyr)
 # library(tools)
+library(leaflet)
 library(shiny)
 library(rgdal)
 library(spsurvey)
