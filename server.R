@@ -1,6 +1,6 @@
 library(dplyr)
 library(spdplyr)
-library(tools)
+# library(tools)
 library(shiny)
 library(rgdal)
 library(spsurvey)
@@ -9,36 +9,40 @@ source('support.functions.r')
 
 # Define server logic
 shinyServer(function(input, output, session) {
-  ## Initialize temp to work within
+  # Initialize temp to work within
   temp <- reactiveValues(placeholder = "placeholder",
-                         ## Save what the base working directory is
+                         # Save what the base working directory is
                          origdir = getwd(),
                          sessiontempdir = tempdir()
                          )
   
-  # allow for wonking big files
+  # Allow for wonking big files
   options(shiny.maxRequestSize = 30 * 1024^2)
-  ## Get a full stacktrace for debugging purposes, although it's unlikely to be ncessary or even helpful
+  # Get a full stacktrace for debugging purposes, although it's unlikely to be ncessary or even helpful
   # options(shiny.fullstacktrace = TRUE)
   
-  ## When a valid shapefile-containing .zip gets uploaded, update the inputs that are available
+  # When a valid shapefile-containing .zip gets uploaded, update the inputs that are available
   observeEvent(eventExpr = input$uploadzip,
                handlerExpr = {
                  # Display a busy message
                  showNotification(ui = "Please wait while the shapefile is extracted and loaded. This can take a bit with large and complex polygons.",
-                                  # ui = '<img src="busy.gif" class="w3-round" alt="BUSY">',
                                   duration = NULL,
                                   closeButton = FALSE,
                                   id = "busy",
                                   type = "warning")
 
-                 ## Get the directory to work within
+                 # Get the directory to work within
                  temp$directory <- gsub(input$uploadzip$datapath,
-                                        pattern = "/[0-9]{1,3}$",
+                                        pattern = "/\\d{1,3}$",
                                         replacement = "")
                  temp$spdf <- shape.extract()
-                 if (is.null(temp$spdf)) {
-                   fieldnames <- "No valid single shapefile found"
+                 if (is.null(temp$spdf) | !(class(temp$spdf) %in% c("SpatialPolygonsDataFrame"))) {
+                   showNotification(ui = "No single valid polygon shapefile found. Check the uploaded .zip file to make sure it only contains one polygon shapefile",
+                                    duration = NULL,
+                                    closeButton = TRUE,
+                                    id = "spdferror",
+                                    type = "warning")
+                   # fieldnames <- "No valid single shapefile found"
                  } else {
                    fieldnames <- names(temp$spdf@data)
                  }
@@ -62,7 +66,7 @@ shinyServer(function(input, output, session) {
                  removeNotification(id = "busy")
                })
   
-  ## When the user clicks the button after selecting a stratum field
+  # When the user clicks the button after selecting a stratum field
   observeEvent(eventExpr = input$submitstratum,
                handlerExpr = {
                  # Display a busy message
@@ -73,8 +77,12 @@ shinyServer(function(input, output, session) {
                                   type = "warning")
                  
                  if (input$strataname != "") {
-                   ## Add the relevant values to STRATUM
+                   # Add the relevant values to STRATUM
                    temp$spdf@data$STRATUM <- as.character(temp$spdf@data[, input$strataname])
+                   # And also sanitize them WITHOUT PERMISSION
+                   temp$spdf@data$STRATUM <- gsub(temp$spdf@data$STRATUM,
+                                                  pattern = "\\W",
+                                                  replacement = "")
                    
                    # This bit is shamelessly stolen from another one of my packages
                    # It'll dissolve the polygons by strata if they aren't already
@@ -102,7 +110,7 @@ shinyServer(function(input, output, session) {
                    }
 
                    
-                   ## Write this file out to use in spsurvey::grts()
+                   # Write this file out to use in spsurvey::grts()
                    # This shouldn't be necessary anymore, but I'm afraid to break things I'll have to fix at this point
                    rgdal::writeOGR(obj = temp$spdf[,"STRATUM"],
                                    dsn = temp$sessiontempdir,
@@ -111,15 +119,15 @@ shinyServer(function(input, output, session) {
                                    overwrite_layer = TRUE)
                    print(list.files(path = temp$sessiontempdir, pattern = "sample_frame"))
                    
-                   ## Jump to the map, but only if it won't drag the user away from the allocation tab
+                   # Jump to the map, but only if it won't drag the user away from the allocation tab
                    if (!(input$maintabs == "Point Allocation" & input$allocation != "")) {
                      updateTabsetPanel(session,
                                        inputId = "maintabs",
                                        selected = "Point Allocation") 
                    }
                    
-                   ## Update the UI
-                   ## If there are already textInput()s for strata, remove them with the lookup table
+                   # Update the UI
+                   # If there are already textInput()s for strata, remove them with the lookup table
                    if (!is.null(temp$ui.lut) & input$allocation == "Manually") {
                      print("attempting to remove ui elements")
                      for (id in 1:nrow(temp$ui.lut)) {
@@ -129,12 +137,12 @@ shinyServer(function(input, output, session) {
                      }
                    }
                    
-                   ## Build a lookup table of strata and their corresponding inputIds for use later
+                   # Build a lookup table of strata and their corresponding inputIds for use later
                    temp$ui.lut <-  data.frame(STRATUM = unique(temp$spdf@data$STRATUM))
                    temp$ui.lut$base <- paste0("manualbase", rownames(temp$ui.lut))
                    temp$ui.lut$over <- paste0("manualover", rownames(temp$ui.lut))
                    
-                   ## Add the inputs for strata using the lookup table. A loop is necessary, unfortunately
+                   # Add the inputs for strata using the lookup table. A loop is necessary, unfortunately
                    for (id in 1:nrow(temp$ui.lut)) {
                      print(id)
                      insertUI(
@@ -159,7 +167,7 @@ shinyServer(function(input, output, session) {
                  removeNotification(id = "busy")
                })
   
-  ## When the user selects a new allocation scheme, as long as it's not blank, jump to the relevant tab
+  # When the user selects a new allocation scheme, as long as it's not blank, jump to the relevant tab
   observeEvent(eventExpr = input$allocation,
                handlerExpr = {
                  if (input$allocation != "") {
@@ -212,7 +220,7 @@ shinyServer(function(input, output, session) {
                  })
                })
   
-  ## When the user clicks the button indicating that they're done with their point allocation, generate a design object
+  # When the user clicks the button indicating that they're done with their point allocation, generate a design object
   observeEvent(eventExpr = input$allocated,
                handlerExpr = {
                  # Display a busy message
@@ -234,30 +242,37 @@ shinyServer(function(input, output, session) {
                                        replacement = "")
                  
                  if (input$allocation == "Manually") {
-                   ## Get all the inputs because I can't just slice them out all at once from a reactive list
+                   # Get all the inputs because I can't just slice them out all at once from a reactive list
                    temp$inputs <- c()
                    for (id in c(temp$ui.lut$base, temp$ui.lut$over)) {
                      temp$inputs <- c(temp$inputs, input[[id]])
                    }
                    temp$inputs <- setNames(temp$inputs,
                                            c(temp$ui.lut$base, temp$ui.lut$over))
-                   ## Build the design object
+                   # Build the design object
                    temp$design <- lapply(temp$ui.lut$STRATUM,
-                                         function(X, ui.lut, panel.names, input){
-                                           list(
-                                             panel = setNames(rep(input[ui.lut$base[ui.lut$STRATUM == X]],
-                                                                  times = length(panel.names)),
-                                                              panel.names),
-                                             seltype = "Equal",
-                                             over = input[ui.lut$over[ui.lut$STRATUM == X]] * length(panel.names)
-                                           )
-                                         },
                                          ui.lut = temp$ui.lut,
                                          panel.names = temp$panels,
-                                         input = temp$inputs
-                   )
+                                         input = temp$inputs,
+                                         function(X, ui.lut, panel.names, input){
+                                           # How many panels?
+                                           panel_count <- length(panel.names)
+                                           # Get those counts
+                                           base_counts <- rep(input[ui.lut$base[ui.lut$STRATUM == X]],
+                                                              times = panel_count)
+                                           # Oversample count
+                                           over_count <- input[ui.lut$over[ui.lut$STRATUM == X]] * length(panel.names)
+                                           
+                                           list(panel = setNames(base_counts,
+                                                                 panel.names),
+                                                seltype = "Equal",
+                                                over = over_count)
+                                         })
+                   
+                   # Set the names of that list
                    temp$design <- setNames(temp$design,
                                            temp$ui.lut$STRATUM)
+                   
                    output$design <- renderText({
                      paste(temp$design)
                    })
@@ -291,41 +306,43 @@ shinyServer(function(input, output, session) {
                    })
                    print(temp$design)
                  }
-                 ## Create a string version of the design object to write out
+                 # Create a string version of the design object to write out
                  temp$design.string <- paste(paste0("'",
                                                     names(temp$design), "' = ",
-                                                    stringr::str_replace_all(string = paste0(as.character(temp$design)),
-                                                                             pattern = "\\\"",
-                                                                             replacement = "'")),
+                                                    gsub(paste0(as.character(temp$design)),
+                                                         pattern = "\\\"",
+                                                         replacement = "'")),
                                              collapse = ",")
                  
-                 ## Add the panel names to temp$design.string because they were lost in the process
+                 # Add the panel names to temp$design.string because they were lost in the process
                  temp$strata.panels <- unlist(stringr::str_extract_all(string = temp$design.string,
-                                                                       pattern = "panel = c[(]([0-9]|,| ){1,1000}[)]"))
+                                                                       pattern = "panel = c[(](\\d|,| ){1,1000}[)]"))
                  for (stratum in temp$strata.panels) {
                    # I'll revisit this to make it prettier. Removing the piping was the priority in the meantime
-                   temp$design.string <- stringr::str_replace_all(replacement = paste0("panel = c(",
-                                                                                       paste(stringr::str_replace_all(paste0("'",
-                                                                                                                             temp$panels,
-                                                                                                                             "'=",
-                                                                                                                             stringr::str_extract_all(string = stratum,
-                                                                                                                                                      pattern = "[0-9]{1,4}")[[1]]),
-                                                                                                                      pattern = "\\\"",
-                                                                                                                      replacement = ""),
-                                                                                             collapse = ","),
-                                                                                       ")"),
-                                                                  string = temp$design.string,
-                                                                  pattern = stringr::str_replace_all(stringr::str_replace_all(stratum,
-                                                                                                                              pattern = "[(]",
-                                                                                                                              replacement = "[(]"),
-                                                                                                     pattern = "[)]",
-                                                                                                     replacement = "[)]"))
+                   # Given that this works, I'm disinclined to touch it anymore
+                   # The point is that it makes a version of the design object that can be pasted into the output sample_script.R and Just Work(TM)
+                   temp$design.string <- gsub(temp$design.string,
+                                              pattern = gsub(gsub(stratum,
+                                                                  pattern = "[(]",
+                                                                  replacement = "[(]"),
+                                                             pattern = "[)]",
+                                                             replacement = "[)]"),
+                                              replacement = paste0("panel = c(",
+                                                                   paste(gsub(paste0("'",
+                                                                                     temp$panels,
+                                                                                     "'=",
+                                                                                     stringr::str_extract_all(string = stratum,
+                                                                                                              pattern = "\\d{1,4}")[[1]]),
+                                                                              pattern = "\\\"",
+                                                                              replacement = ""),
+                                                                         collapse = ","),
+                                                                   ")"))
                  }
                  # Remove the busy notification
                  removeNotification(id = "busy")
                })
   
-  ## When the user clicks the fetch button, generate points from the design object
+  # When the user clicks the fetch button, generate points from the design object
   observeEvent(eventExpr = input$fetch,
                handlerExpr = {
                  # Display a busy message
@@ -336,11 +353,12 @@ shinyServer(function(input, output, session) {
                                   type = "warning")
                  
                  if (!is.null(temp$design) & !is.null(temp$spdf)) {
-                   temp$seednum <- sample(1:999999, size = 1)
-                   # temp$seednum <- runif(ceiling(runif(n = 1, min = 100000, max = 999998)))
-                   set.seed(temp$seednum)
+                   # temp$seednum <- sample(1:999999, size = 1)
                    
-                   ## Write out the shapefile of the stratification polygons
+                   set.seed(input$seednum)
+                   
+                   # Write out the shapefile of the stratification polygons
+                   # This is done when the stratum variable is selected, so this should be redundant??????
                    rgdal::writeOGR(obj = temp$spdf[, "STRATUM"],
                                    dsn = temp$sessiontempdir,
                                    layer = "sample_frame",
@@ -348,13 +366,14 @@ shinyServer(function(input, output, session) {
                                    overwrite_layer = TRUE)
                    
                    
-                   ## Construct the script to draw a design with the the current design object
-                   ## The first step is copying the script that has the initial content
+                   # Construct the script to draw a design with the the current design object
+                   # The first step is copying the script that has the initial content
+                   # If overwrite = FALSE then this turns into a hot mess with multiple attempts at a design
                    file.copy(from = paste0(temp$origdir, "/draw_pt1.r"),
                              to = paste0(temp$sessiontempdir, "/sample_script.r"),
                              overwrite = TRUE)
                    
-                   ## This is the metadata section describing the design setup
+                   # This is the metadata section describing the design setup
                    temp$draw_pt2 <- c("# Project Name:",
                                       paste0("project.name <- '",
                                              gsub(input$projname,
@@ -377,24 +396,24 @@ shinyServer(function(input, output, session) {
                                              } else if (input$allocation == "Proportionally") {
                                                " by stratum areas"
                                              }),
-                                      if (input$allocation == "Proportionally") {
-                                        c(paste0("# Total number of base points per panel: ", input$basecount),
-                                          paste0("# Minimum number of base points per stratum per panel: ", input$minbase),
-                                          paste0("# Minimum number of oversample points per stratum per panel: ", input$minoversample),
-                                          paste0("# Minimum ratio of oversample:base points per stratum per panel: ", input$minoversampleproportion),
-                                          ""
-                                        )
-                                      } else if (input$allocation == "Equally") {
-                                        c(paste0("# Total number of base points per panel: ", input$basecount),
-                                          paste0("# Minimum number of oversample points per stratum per panel: ", input$minoversample),
-                                          paste0("# Minimum ratio of oversample:base points per stratum per panel: ", input$minoversampleproportion),
-                                          "")
-                                      } else if (input$allocation == "Manually") {
-                                        c("# See the design object construction in section 4 for details on point allocation.",
-                                          "")
-                                      },
+                                      switch(input$allocation,
+                                             "Proportionally" = {
+                                               c(paste0("# Total number of base points per panel: ", input$basecount),
+                                                 paste0("# Minimum number of base points per stratum per panel: ", input$minbase),
+                                                 paste0("# Minimum number of oversample points per stratum per panel: ", input$minoversample),
+                                                 paste0("# Minimum ratio of oversample:base points per stratum per panel: ", input$minoversampleproportion),
+                                                 "")
+                                             },
+                                             "Equally" = {
+                                               c(paste0("# Total number of base points per panel: ", input$basecount),
+                                                 paste0("# Minimum number of oversample points per stratum per panel: ", input$minoversample),
+                                                 paste0("# Minimum ratio of oversample:base points per stratum per panel: ", input$minoversampleproportion),
+                                                 "")
+                                             },
+                                             "Manually" = { c("# See the design object construction in section 3 for details on point allocation.",
+                                                              "")}),
                                       "# Seed number used during sample draw:",
-                                      paste0("seed.number <- ", temp$seednum),
+                                      paste0("seed.number <- ", input$seednum),
                                       ""
                    )
 
@@ -405,13 +424,13 @@ shinyServer(function(input, output, session) {
                    
                    temp$draw_pt5 <- readLines(paste0(temp$origdir, "/draw_pt5.r"))
                    
-                   ## Append the script components to the copy of sample_script.r
+                   # Append the script components to the copy of sample_script.r
                    cat(c(temp$draw_pt2, temp$draw_pt3, temp$draw_pt4, temp$draw_pt5),
                        file = paste0(temp$sessiontempdir, "/sample_script.r"),
                        sep = "\n",
                        append = TRUE)
                    
-                   ## Generate the points
+                   # Generate the points
                    temp$points <- grts.gen()
                    
                  }
@@ -420,92 +439,105 @@ shinyServer(function(input, output, session) {
                  removeNotification(id = "busy")
                })
   
-  ## Extracting the contents of a .zip and returning an SPDF of the contents
+  # Extracting the contents of a .zip and returning an SPDF of the contents
   shape.extract <- reactive({
     shapes <- input$uploadzip
-    ## If there's no input file
+    # If there's no input file
     if (is.null(shapes)) {
       return(NULL)
     } 
-    ## If the input file is not a zip file
-    if (!grepl(pattern = "\\.(zip)|(ZIP)$", shapes$name)) {
+    # If the input file is not a zip file
+    if (!grepl(shapes$name,
+               pattern = "\\.zip$",
+               ignore.case = TRUE)) {
       return(NULL)
     }
     print("File exists and ends in .zip")
     print("The value in shapes$datapath is:")
     print(dirname(shapes$datapath))
-    ## Unzip with an OS-specific system call
+    # Unzip with an OS-specific system call
     switch(Sys.info()[["sysname"]],
            Windows = {
              print("This is Windows.")
-             ## Set the new working directory to the uploaded file's datapath. Not sure why this is here, but removing it breaks stuff
+             # Set the new working directory to the uploaded file's datapath. Not sure why this is here, but removing it breaks stuff
              setwd(dirname(shapes$datapath))
-             ## Pass this argument to the OS. It changes directories. When making Windows system calls, you need to invoke "cmd.exe /c" first
+             # Pass this argument to the OS. It changes directories. When making Windows system calls, you need to invoke "cmd.exe /c" first
              system(paste0("cmd.exe /c cd ", dirname(shapes$datapath)))
-             ## Pass the extraction argument to the OS. I had to aim it at my 7zip install. If yours is elsewhere, change the filepath to it, but know that those escaped quotation marks are necessary if there are spaces in your folder names. Thanks, Microsoft
+             # Pass the extraction argument to the OS. I had to aim it at my 7zip install. If yours is elsewhere, change the filepath to it, but know that those escaped quotation marks are necessary if there are spaces in your folder names. Thanks, Microsoft
              system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe e -aoa ", shapes$datapath))
-             setwd(temp$origdir) ## Restoring the working directory
-             ## Diagnostic terminal output to reassure a debugger that it is in fact reset to the original working directory
+             setwd(temp$origdir) # Restoring the working directory
+             # Diagnostic terminal output to reassure a debugger that it is in fact reset to the original working directory
              print("Resetting working directory to:")
              print(getwd())
            },
            Linux = {
              print("This is Unix. I know this.")
-             ## Setting the working directory
+             # Setting the working directory
              setwd(dirname(shapes$datapath))
-             ## Passing this to the OS
+             # Passing this to the OS
              system(sprintf("cd %s", dirname(shapes$datapath)))
-             ## Just checking for debugging
+             # Just checking for debugging
              print(getwd())
-             ## The unzipping argument to pass to the OS
+             # The unzipping argument to pass to the OS
              system(sprintf("unzip -u %s", shapes$datapath))
-             ## Set the working directory back
+             # Set the working directory back
              setwd(temp$origdir)
            }
     )
-    ## Get the shapefile name
-    temp$shapename <- list.files(dirname(shapes$datapath), pattern = "\\.shp$")
-    temp$shapename <- stringr::str_replace(temp$shapename,
-                                           pattern = "\\.shp$",
-                                           replacement = "")
-    ## If there wasn't a shapefile or there was more than one, return NULL
+    # Get the shapefile name
+    extracted_files <- list.files(dirname(shapes$datapath))
+    temp$shapename <- extracted_files[grepl(extracted_files, pattern = "\\.shp$", ignore.case = TRUE)]
+    temp$shapename <- gsub(temp$shapename,
+                           pattern = "\\.shp$",
+                           replacement = "")
+    
+    # Are there all the necessary components of a shapefile?
+    shapefile_components <- extracted_files[grepl(extracted_files,
+                                                  pattern = paste0("^", temp$shapename, "\\.(dbf|DBF|prj|PRJ|shp|SHP|shx|SHX)$"),
+                                                  ignore.case = TRUE)]
+
+    # If there wasn't a shapefile or there was more than one, return NULL
     if (length(temp$shapename) != 1) {
       return(NULL)
     }
-    ## Read in the shapefile and add areas
+    # Does
+    if (length(shapefile_components) != 4) {
+      return(NULL)
+    }
+    
+    # Read in the FIRST shapefile and add areas. Too bad if they included more than one!
     spdf <- rgdal::readOGR(dsn = dirname(shapes$datapath),
-                           layer = temp$shapename)
+                           layer = temp$shapename[1])
     spdf <- area.add(spdf,
                      area.sqkm = FALSE)
-    ## Store the shapefile location to reference later to read in the shapefiles within spsurvey::grts()
-    temp$shapefile.location <- paste0(shapes$directory, temp$shapename, sep = "/")
+
     return(spdf)
   })
   
-  ## Just listening for if something that should update the map changes
+  # Just listening for if something that should update the map changes
   listen.map <- reactive({
     list(input$strataname, input$updatemap, temp$points)
   })
   
-  ## Update the points table
+  # Update the points table
   observeEvent(eventExpr = temp$points,
                handlerExpr = {
                  output$pointdata <- renderTable(temp$points@data)
                })
   
-  ## This invokes grts.custom() and both returns and writes out the results
+  # This invokes grts.custom() and both returns and writes out the results
   grts.gen <- reactive({
-
+    # DRAW SOME POINTS
     points <- grts.custom(design_object = temp$design,
                           design_name = gsub(input$projname,
                                              pattern = "\\W",
                                              replacement = ""),
                           sp_object = temp$spdf,
-                          seed_number = temp$seednum
+                          seed_number = input$seednum
     )
     
     # I have no idea why this save() call is here
-    save(points, file = "sample_draw")
+    # save(points, file = "sample_draw")
     rgdal::writeOGR(obj = points,
                     dsn = temp$sessiontempdir,
                     layer = "sample_draw",
@@ -516,11 +548,11 @@ shinyServer(function(input, output, session) {
       stop("No shapefile called 'sample_draw' exists in the directory.")
     }
     
-    ## Create a .zip fle in case user wants the points, which depends on a system call
+    # Create a .zip fle in case user wants the points, which depends on a system call
     setwd(temp$sessiontempdir)
     files_to_zip <- list.files(pattern = "^(sample_frame|sample_draw|sample_script)\\.(dbf|prj|shp|shx|r)$",
                                ignore.case = TRUE)
-    files_to_zip <- files_to_zip[!grepl(files_to_zip, pattern = "^current")]
+
     switch(Sys.info()[["sysname"]],
            Windows = {
              system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe a -tzip results.zip ",
@@ -540,7 +572,7 @@ shinyServer(function(input, output, session) {
     return(points)
   })
   
-  ## Download handler for the .zip file created by grts.gen()
+  # Download handler for the .zip file created by grts.gen()
   output$downloadData <- downloadHandler(
     filename = function() {
       paste0(gsub(input$projname,

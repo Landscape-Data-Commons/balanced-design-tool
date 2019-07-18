@@ -34,7 +34,8 @@ sample.sites@data <- sample.sites@data[, fields.relevant]
 names(sample.sites@data) <- c("PLOTID", "STRATUM", "PANEL", "IntPtWt", "xcoord", "ycoord")
 
 ## Set the panel names to "Oversample" instead of "OverSamp"
-sample.sites@data[sample.sites@data[["PANEL"]] == "OverSamp", "PANEL"] <- "Oversample"
+oversample_panel_names <- paste(sample_sites@data[["STRATUM"]][sample_sites@data[["PANEL"]] == "OverSamp"], "Oversample")
+sample_sites@data[["PANEL"]][sample_sites@data[["PANEL"]] == "OverSamp"] <- oversample_panel_names
 
 ## Rename the plots with the strata
 ## Note that this does not attempt to abbreviate

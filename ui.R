@@ -66,12 +66,7 @@ fluidPage(
       conditionalPanel(condition = "input.fetch > 0",
                        downloadButton(outputId = 'downloadData',
                                       label = 'Download Points as shapefile')
-                       ),
-      # conditionalPanel(condition = "output.busy == 'yes'",
-                       # img(src='busy.gif', align = "left")
-      # )
-      
-      imageOutput("busy")
+                       )
     ),
     mainPanel(
       tabsetPanel(
@@ -87,7 +82,11 @@ fluidPage(
                         selectInput(inputId = "allocation",
                                     label = "Allocate points proportionally by strata areas, equally across strata, or manually:",
                                     choices = c(""),
-                                    selected = "")
+                                    selected = ""),
+                        numericInput(inputId = "seednum",
+                                     label = "Seed number for reproducibility:",
+                                     value = 420,
+                                     min = 0)
                         ),
                  column(width = 4,
                         conditionalPanel(condition = "input.panelnames == '' && input.allocation != ''",
