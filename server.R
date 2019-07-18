@@ -79,6 +79,10 @@ shinyServer(function(input, output, session) {
                  if (input$strataname != "") {
                    # Add the relevant values to STRATUM
                    temp$spdf@data$STRATUM <- as.character(temp$spdf@data[, input$strataname])
+                   # And also sanitize them WITHOUT PERMISSION
+                   temp$spdf@data$STRATUM <- gsub(temp$spdf@data$STRATUM,
+                                                  pattern = "\\W",
+                                                  replacement = "")
                    
                    # This bit is shamelessly stolen from another one of my packages
                    # It'll dissolve the polygons by strata if they aren't already
