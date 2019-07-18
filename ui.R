@@ -119,6 +119,11 @@ fluidPage(
                  
         ),
         
+        tabPanel(title = "Point Map",
+                 helpText("Map of selected sample points"),
+                 leafletOutput(outputId = "pointmap",
+                               height = "80vh")
+        ),
         
         tabPanel(title = "Point Table",
                  helpText("Table of selected sample points"),
