@@ -479,8 +479,7 @@ shinyServer(function(input, output, session) {
                            layer = temp$shapename)
     spdf <- area.add(spdf,
                      area.sqkm = FALSE)
-    ## Store the shapefile location to reference later to read in the shapefiles within spsurvey::grts()
-    temp$shapefile.location <- paste0(shapes$directory, temp$shapename, sep = "/")
+
     return(spdf)
   })
   
