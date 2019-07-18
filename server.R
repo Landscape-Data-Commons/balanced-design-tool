@@ -507,7 +507,7 @@ shinyServer(function(input, output, session) {
     )
     
     # I have no idea why this save() call is here
-    save(points, file = "sample_draw")
+    # save(points, file = "sample_draw")
     rgdal::writeOGR(obj = points,
                     dsn = temp$sessiontempdir,
                     layer = "sample_draw",
