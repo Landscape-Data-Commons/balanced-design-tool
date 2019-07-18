@@ -497,7 +497,7 @@ shinyServer(function(input, output, session) {
   
   # This invokes grts.custom() and both returns and writes out the results
   grts.gen <- reactive({
-
+    # DRAW SOME POINTS
     points <- grts.custom(design_object = temp$design,
                           design_name = gsub(input$projname,
                                              pattern = "\\W",
