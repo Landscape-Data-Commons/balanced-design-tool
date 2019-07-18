@@ -36,16 +36,16 @@ shinyServer(function(input, output, session) {
                  temp$directory <- gsub(input$uploadzip$datapath,
                                         pattern = "/\\d{1,3}$",
                                         replacement = "")
-                 temp$spdf <- shape.extract()
-                 if (is.null(temp$spdf) | !(class(temp$spdf) %in% c("SpatialPolygonsDataFrame"))) {
+                 temp$polygons <- shape.extract()
+                 if (is.null(temp$polygons) | !(class(temp$polygons) %in% c("SpatialPolygonsDataFrame"))) {
                    showNotification(ui = "No single valid polygon shapefile found. Check the uploaded .zip file to make sure it only contains one polygon shapefile",
                                     duration = NULL,
                                     closeButton = TRUE,
-                                    id = "spdferror",
+                                    id = "polygonserror",
                                     type = "warning")
                    # fieldnames <- "No valid single shapefile found"
                  } else {
-                   fieldnames <- names(temp$spdf@data)
+                   fieldnames <- names(temp$polygons@data)
                  }
                  updateSelectInput(session,
                                    inputId = "strataname",
@@ -79,41 +79,41 @@ shinyServer(function(input, output, session) {
                  
                  if (input$strataname != "") {
                    # Add the relevant values to STRATUM
-                   temp$spdf@data$STRATUM <- as.character(temp$spdf@data[, input$strataname])
+                   temp$polygons@data$STRATUM <- as.character(temp$polygons@data[[input$strataname]])
                    # And also sanitize them WITHOUT PERMISSION
-                   temp$spdf@data$STRATUM <- gsub(temp$spdf@data$STRATUM,
-                                                  pattern = "\\W",
-                                                  replacement = "")
+                   temp$polygons@data$STRATUM <- gsub(temp$polygons@data$STRATUM,
+                                                      pattern = "\\W",
+                                                      replacement = "")
                    
                    # This bit is shamelessly stolen from another one of my packages
                    # It'll dissolve the polygons by strata if they aren't already
-                   unique_ids <- as.character(unique(temp$spdf@data[["STRATUM"]]))
-                   if (length(unique_ids) > nrow(temp$spdf@data)) {
+                   unique_ids <- as.character(unique(temp$polygons@data[["STRATUM"]]))
+                   if (length(unique_ids) > nrow(temp$polygons@data)) {
                      poly_list <- lapply(X = unique_ids,
-                                         spdf = temp$spdf,
+                                         polygons = temp$polygons,
                                          dissolve_field = "STRATUM",
-                                         FUN = function(X, spdf, dissolve_field){
-                                           spdf_current <- spdf[spdf@data[[dissolve_field]] == X, ]
-                                           spdf_current <- methods::as(sf::st_combine(sf::st_as_sf(spdf_current)), "Spatial")
+                                         FUN = function(X, polygons, dissolve_field){
+                                           polygons_current <- polygons[polygons@data[[dissolve_field]] == X, ]
+                                           polygons_current <- methods::as(sf::st_combine(sf::st_as_sf(polygons_current)), "Spatial")
                                            df <- data.frame(id = X,
                                                             stringsAsFactors = FALSE)
                                            names(df) <- dissolve_field
-                                           rownames(df) <- spdf_current@polygons[[1]]@ID
-                                           spdf_current <- sp::SpatialPolygonsDataFrame(Sr = spdf_current,
-                                                                                        data = df)
-                                           return(spdf_current)
+                                           rownames(df) <- polygons_current@polygons[[1]]@ID
+                                           polygons_current <- sp::SpatialPolygonsDataFrame(Sr = polygons_current,
+                                                                                            data = df)
+                                           return(polygons_current)
                                          })
-                     temp$spdf <- do.call(rbind,
-                                          poly_list)
+                     temp$polygons <- do.call(rbind,
+                                              poly_list)
                      
-                     temp$spdf <- area.add(temp$spdf,
-                                           area.sqkm = FALSE)
+                     temp$polygons <- area.add(temp$polygons,
+                                               area.sqkm = FALSE)
                    }
                    
                    
                    # Write this file out to use in spsurvey::grts()
                    # This shouldn't be necessary anymore, but I'm afraid to break things I'll have to fix at this point
-                   rgdal::writeOGR(obj = temp$spdf[,"STRATUM"],
+                   rgdal::writeOGR(obj = temp$polygons[,"STRATUM"],
                                    dsn = temp$sessiontempdir,
                                    layer = "sample_frame",
                                    driver = "ESRI Shapefile",
@@ -139,7 +139,7 @@ shinyServer(function(input, output, session) {
                    }
                    
                    # Build a lookup table of strata and their corresponding inputIds for use later
-                   temp$ui.lut <-  data.frame(STRATUM = unique(temp$spdf@data$STRATUM))
+                   temp$ui.lut <-  data.frame(STRATUM = unique(temp$polygons@data$STRATUM))
                    temp$ui.lut$base <- paste0("manualbase", rownames(temp$ui.lut))
                    temp$ui.lut$over <- paste0("manualover", rownames(temp$ui.lut))
                    
@@ -279,7 +279,7 @@ shinyServer(function(input, output, session) {
                    })
                  } else {
                    if (input$allocation == "Proportionally") {
-                     sizes <- dplyr::summarize(dplyr::group_by(temp$spdf@data,STRATUM),
+                     sizes <- dplyr::summarize(dplyr::group_by(temp$polygons@data,STRATUM),
                                                AREA = sum(AREA.HA))
                      basecount <- input$basecount
                      minbase <- input$minbase
@@ -287,9 +287,9 @@ shinyServer(function(input, output, session) {
                      minoversampleproportion <- input$minoversampleproportion
                    }
                    if (input$allocation == "Equally") {
-                     sizes <- data.frame(STRATUM = temp$spdf@data$STRATUM,
+                     sizes <- data.frame(STRATUM = temp$polygons@data$STRATUM,
                                          AREA = rep(1,
-                                                    times = length(unique(temp$spdf@data$STRATUM))))
+                                                    times = length(unique(temp$polygons@data$STRATUM))))
                      basecount <- input$basecount
                      minbase <- 0
                      minoversample <- input$minoversample
@@ -353,14 +353,14 @@ shinyServer(function(input, output, session) {
                                   id = "busy",
                                   type = "warning")
                  
-                 if (!is.null(temp$design) & !is.null(temp$spdf)) {
+                 if (!is.null(temp$design) & !is.null(temp$polygons)) {
                    # temp$seednum <- sample(1:999999, size = 1)
                    
                    set.seed(input$seednum)
                    
                    # Write out the shapefile of the stratification polygons
                    # This is done when the stratum variable is selected, so this should be redundant??????
-                   rgdal::writeOGR(obj = temp$spdf[, "STRATUM"],
+                   rgdal::writeOGR(obj = temp$polygons[, "STRATUM"],
                                    dsn = temp$sessiontempdir,
                                    layer = "sample_frame",
                                    driver = "ESRI Shapefile",
@@ -507,12 +507,12 @@ shinyServer(function(input, output, session) {
     }
     
     # Read in the FIRST shapefile and add areas. Too bad if they included more than one!
-    spdf <- rgdal::readOGR(dsn = dirname(shapes$datapath),
-                           layer = temp$shapename[1])
-    spdf <- area.add(spdf,
-                     area.sqkm = FALSE)
-
-    return(spdf)
+    polygons <- rgdal::readOGR(dsn = dirname(shapes$datapath),
+                               layer = temp$shapename[1])
+    polygons <- area.add(polygons,
+                         area.sqkm = FALSE)
+    
+    return(polygons)
   })
   
   # Just listening for if something that should update the map changes
@@ -533,7 +533,7 @@ shinyServer(function(input, output, session) {
                           design_name = gsub(input$projname,
                                              pattern = "\\W",
                                              replacement = ""),
-                          sp_object = temp$spdf,
+                          sp_object = temp$polygons,
                           seed_number = input$seednum
     )
     
