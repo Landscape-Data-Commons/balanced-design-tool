@@ -26,7 +26,6 @@ shinyServer(function(input, output, session) {
                handlerExpr = {
                  # Display a busy message
                  showNotification(ui = "Please wait while the shapefile is extracted and loaded. This can take a bit with large and complex polygons.",
-                                  # ui = '<img src="busy.gif" class="w3-round" alt="BUSY">',
                                   duration = NULL,
                                   closeButton = FALSE,
                                   id = "busy",
