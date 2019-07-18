@@ -34,7 +34,7 @@ shinyServer(function(input, output, session) {
 
                  # Get the directory to work within
                  temp$directory <- gsub(input$uploadzip$datapath,
-                                        pattern = "/[0-9]{1,3}$",
+                                        pattern = "/\\d{1,3}$",
                                         replacement = "")
                  temp$spdf <- shape.extract()
                  if (is.null(temp$spdf)) {
@@ -301,7 +301,7 @@ shinyServer(function(input, output, session) {
                  
                  # Add the panel names to temp$design.string because they were lost in the process
                  temp$strata.panels <- unlist(stringr::str_extract_all(string = temp$design.string,
-                                                                       pattern = "panel = c[(]([0-9]|,| ){1,1000}[)]"))
+                                                                       pattern = "panel = c[(](\\d|,| ){1,1000}[)]"))
                  for (stratum in temp$strata.panels) {
                    # I'll revisit this to make it prettier. Removing the piping was the priority in the meantime
                    # Given that this works, I'm disinclined to touch it anymore
