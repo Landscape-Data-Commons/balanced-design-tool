@@ -119,8 +119,9 @@ fluidPage(
                  
         ),
         
-        tabPanel(title = "View Points",
-                 helpText("Selected sample points"),
+        
+        tabPanel(title = "Point Table",
+                 helpText("Table of selected sample points"),
                  tableOutput(outputId = "pointdata")
         ),
         tabPanel("About",
