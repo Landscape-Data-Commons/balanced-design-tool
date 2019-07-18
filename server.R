@@ -465,6 +465,10 @@ shinyServer(function(input, output, session) {
                    map
                  })
                  
+                 updateTabsetPanel(session,
+                                   inputId = "maintabs",
+                                   selected = "Point Map") 
+                 
                  # Remove the busy notification
                  removeNotification(id = "busy")
                })
