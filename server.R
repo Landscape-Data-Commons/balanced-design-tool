@@ -1,6 +1,5 @@
 library(dplyr)
 library(spdplyr)
-# library(tools)
 library(leaflet)
 library(viridis)
 library(shiny)
