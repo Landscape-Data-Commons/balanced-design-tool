@@ -59,14 +59,16 @@ fluidPage(
       conditionalPanel(condition = "input.strataname != ''",
                        actionButton(inputId = "submitstratum",
                                     label = "Update stratum information")),
+      # The empty string is just to take up space and buffer the buttons
+      helpText(""),
       conditionalPanel(condition = "input.allocated > 0",
                        actionButton(inputId = "fetch",
-                                    label = "Fetch points!")
-      ),
+                                    label = "Fetch points!")),
+      # The empty string is just to take up space and buffer the buttons
+      helpText(""),
       conditionalPanel(condition = "input.fetch > 0",
                        downloadButton(outputId = 'downloadData',
-                                      label = 'Download Points as shapefile')
-                       )
+                                      label = 'Download Points as shapefile'))
     ),
     mainPanel(
       tabsetPanel(
@@ -119,8 +121,14 @@ fluidPage(
                  
         ),
         
-        tabPanel(title = "View Points",
-                 helpText("Selected sample points"),
+        tabPanel(title = "Point Map",
+                 helpText("Map of selected sample points"),
+                 leafletOutput(outputId = "pointmap",
+                               height = "80vh")
+        ),
+        
+        tabPanel(title = "Point Table",
+                 helpText("Table of selected sample points"),
                  tableOutput(outputId = "pointdata")
         ),
         tabPanel("About",
