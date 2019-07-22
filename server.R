@@ -462,6 +462,16 @@ shinyServer(function(input, output, session) {
                                            fillColor = "gray20",
                                            fillOpacity = 1,
                                            radius = 3)
+                   
+                   # Add in a legend for the strata!
+                   map <-   addLegend(map = map,
+                                      position = "topright",
+                                      pal = strata_palette,
+                                      values = ~STRATUM,
+                                      data = polygons,
+                                      title = "Strata",
+                                      opacity = 1)
+                   
                    map
                  })
                  
