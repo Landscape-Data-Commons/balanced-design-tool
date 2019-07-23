@@ -262,7 +262,7 @@ shinyServer(function(input, output, session) {
                                            base_counts <- rep(input[ui.lut$base[ui.lut$STRATUM == X]],
                                                               times = panel_count)
                                            # Oversample count
-                                           over_count <- input[ui.lut$over[ui.lut$STRATUM == X]] * length(panel.names)
+                                           over_count <- input[ui.lut$over[ui.lut$STRATUM == X]] * panel_count
                                            
                                            list(panel = setNames(base_counts,
                                                                  panel.names),
