@@ -279,7 +279,7 @@ shinyServer(function(input, output, session) {
                    })
                  } else {
                    if (input$allocation == "Proportionally") {
-                     sizes <- dplyr::summarize(dplyr::group_by(temp$polygons@data,STRATUM),
+                     sizes <- dplyr::summarize(dplyr::group_by(temp$polygons@data, STRATUM),
                                                AREA = sum(AREA.HA))
                      basecount <- input$basecount
                      minbase <- input$minbase

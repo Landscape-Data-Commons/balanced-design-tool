@@ -123,8 +123,8 @@ fluidPage(
         
         tabPanel(title = "Point Map",
                  helpText("Map of selected sample points"),
-                 leafletOutput(outputId = "pointmap",
-                               height = "80vh")
+                 leaflet::leafletOutput(outputId = "pointmap",
+                                        height = "80vh")
         ),
         
         tabPanel(title = "Point Table",
