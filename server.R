@@ -6,7 +6,7 @@ library(shiny)
 library(rgdal)
 library(spsurvey)
 library(sf)
-source('support.functions.r')
+source('support.functions.R')
 
 # Define server logic
 shinyServer(function(input, output, session) {
@@ -370,8 +370,8 @@ shinyServer(function(input, output, session) {
                    # Construct the script to draw a design with the the current design object
                    # The first step is copying the script that has the initial content
                    # If overwrite = FALSE then this turns into a hot mess with multiple attempts at a design
-                   file.copy(from = paste0(temp$origdir, "/draw_pt1.r"),
-                             to = paste0(temp$sessiontempdir, "/sample_script.r"),
+                   file.copy(from = paste0(temp$origdir, "/draw_pt1.R"),
+                             to = paste0(temp$sessiontempdir, "/sample_script.R"),
                              overwrite = TRUE)
                    
                    # This is the metadata section describing the design setup
@@ -418,16 +418,16 @@ shinyServer(function(input, output, session) {
                                       ""
                    )
                    
-                   temp$draw_pt3 <- readLines(paste0(temp$origdir, "/draw_pt3.r"))
+                   temp$draw_pt3 <- readLines(paste0(temp$origdir, "/draw_pt3.R"))
                    
                    temp$draw_pt4 <- c("",
                                       paste0("design.object <- list(", temp$design.string,")"))
                    
-                   temp$draw_pt5 <- readLines(paste0(temp$origdir, "/draw_pt5.r"))
+                   temp$draw_pt5 <- readLines(paste0(temp$origdir, "/draw_pt5.R"))
                    
-                   # Append the script components to the copy of sample_script.r
+                   # Append the script components to the copy of sample_script.R
                    cat(c(temp$draw_pt2, temp$draw_pt3, temp$draw_pt4, temp$draw_pt5),
-                       file = paste0(temp$sessiontempdir, "/sample_script.r"),
+                       file = paste0(temp$sessiontempdir, "/sample_script.R"),
                        sep = "\n",
                        append = TRUE)
                    
