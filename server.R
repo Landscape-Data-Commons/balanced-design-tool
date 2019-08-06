@@ -444,7 +444,7 @@ shinyServer(function(input, output, session) {
                    map <- addTiles(map = map)
                    # Make a strata palette to use for the map
                    strata_palette <- colorFactor(palette = "viridis",
-                                                 levels = unique(temp$polygons@data[["STRATUM"]]))
+                                                 levels = sort(unique(temp$polygons@data[["STRATUM"]])))
                    # Add the stratification polygons
                    map <- addPolygons(map = map,
                                       data = sp::spTransform(temp$polygons,
