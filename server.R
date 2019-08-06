@@ -123,7 +123,7 @@ shinyServer(function(input, output, session) {
                    # Let's make a static map of these!
                    output$strata_map <- renderPlot(expr = {
                      # Convert to an sf object so ggplot can work with it
-                     polygons_sf <- as(polygons, "sf")
+                     polygons_sf <- as(temp$polygons, "sf")
                      # Make the map as just polygons filled by stratum
                      strata_map <- ggplot(data = polygons_sf) + 
                        geom_sf(aes(fill = STRATUM)) +
