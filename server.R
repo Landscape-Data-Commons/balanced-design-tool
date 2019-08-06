@@ -120,6 +120,31 @@ shinyServer(function(input, output, session) {
                                    overwrite_layer = TRUE)
                    print(list.files(path = temp$sessiontempdir, pattern = "sample_frame"))
                    
+                   # Let's make a static map of these!
+                   output$strata_map <- renderPlot(expr = {
+                     # Convert to an sf object so ggplot can work with it
+                     polygons_sf <- as(polygons, "sf")
+                     # Make the map as just polygons filled by stratum
+                     strata_map <- ggplot(data = polygons_sf) + 
+                       geom_sf(aes(fill = STRATUM)) +
+                       scale_fill_viridis_d() +
+                       theme(panel.background = element_rect(fill = "white",
+                                                             color = "gray90"),
+                             legend.position = "bottom",
+                             panel.grid = element_blank(),
+                             axis.title = element_blank(),
+                             axis.text = element_blank(),
+                             axis.ticks = element_blank()) +
+                       # Sometimes the legend would be too wide and get clipped, so we'll force it to be narrower
+                       guides(fill = guide_legend(title = NULL,
+                                                  ncol = 3))
+                     strata_map
+                   })
+                   
+                   
+                   
+                   
+                   
                    # Jump to the map, but only if it won't drag the user away from the allocation tab
                    if (!(input$maintabs == "Point Allocation" & input$allocation != "")) {
                      updateTabsetPanel(session,
