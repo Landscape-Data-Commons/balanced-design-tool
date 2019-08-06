@@ -130,7 +130,10 @@ shinyServer(function(input, output, session) {
                        scale_fill_viridis_d() +
                        theme(panel.background = element_rect(fill = "white",
                                                              color = "gray90"),
-                             legend.position = "bottom",
+                             plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                             # Turning off the legend because it's frustratingly bad
+                             # There's no dynamic wrapping, so 90% of the time it clips past the plot boundary
+                             legend.position = "none",
                              panel.grid = element_blank(),
                              axis.title = element_blank(),
                              axis.text = element_blank(),
@@ -138,6 +141,7 @@ shinyServer(function(input, output, session) {
                        # Sometimes the legend would be too wide and get clipped, so we'll force it to be narrower
                        guides(fill = guide_legend(title = NULL,
                                                   ncol = 3))
+                     
                      strata_map
                    })
                    
