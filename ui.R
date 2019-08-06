@@ -81,6 +81,8 @@ fluidPage(
         
         tabPanel(title = "Point Allocation",
                  column(width = 6,
+                        # This is just a buffer to make things prettier
+                        helpText(""),
                         selectInput(inputId = "allocation",
                                     label = "Allocate points proportionally by strata areas, equally across strata, or manually:",
                                     choices = c(""),
