@@ -495,13 +495,13 @@ shinyServer(function(input, output, session) {
                                            radius = 3)
                    
                    # Add in a legend for the strata!
-                   map <-   addLegend(map = map,
-                                      position = "topright",
-                                      pal = strata_palette,
-                                      values = ~STRATUM,
-                                      data = temp$polygons,
-                                      title = "Strata",
-                                      opacity = 1)
+                   map <- addLegend(map = map,
+                                    position = "topright",
+                                    pal = strata_palette,
+                                    values = ~STRATUM,
+                                    data = temp$polygons,
+                                    title = "Strata",
+                                    opacity = 1)
                    
                    map
                  })
