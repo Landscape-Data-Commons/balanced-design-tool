@@ -124,6 +124,11 @@ shinyServer(function(input, output, session) {
                    output$strata_map <- renderPlot(expr = {
                      # Convert to an sf object so ggplot can work with it
                      polygons_sf <- as(temp$polygons, "sf")
+                     
+                     # Because of goofy legend garbage, we're going to adjust the aspect ratio
+                     polygons_bb <- sf::st_bbox(polygons_sf)
+                     aspect_ratio <- (polygons_bb[["ymax"]] - polygons_bb[["ymin"]]) / (polygons_bb[["xmax"]] - polygons_bb[["xmin"]])
+                     
                      # Make the map as just polygons filled by stratum
                      strata_map <- ggplot(data = polygons_sf) + 
                        geom_sf(aes(fill = STRATUM)) +
