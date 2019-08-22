@@ -649,7 +649,8 @@ shinyServer(function(input, output, session) {
                   pattern = "\\W",
                   replacement = ""),
              "_results_",
-             format(Sys.Date(), "%Y%m%d"),
+             paste0(format(Sys.Date(), "%Y-%m-%d"),
+                    format(Sys.time(), "T%H%MZ", tz = "GMT")),
              ".zip")
     },
     content = function(file) {
