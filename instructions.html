@@ -1,37 +1,84 @@
-<!DOCTYPE HTML>
-<html>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
 <head>
-<title>How to use this tool: </title>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+<title>instructions.utf8.md</title>
+
+
+
+
+
+
+
+
+
+
 </head>
+
 <body>
-<p> First, provide an ESRI polygon shapefile that defines the geographic extent of your design. If your design is stratified, the attribute table for the polygons needs to contain the stratum identity for each polygon. If you are not stratifying, there must be a field in the attribute table with the name of the project. <em>Make sure there are no NULL values in any fields and that there are no polygons that you don't want points in!</em>
-Create a .ZIP that contains <em>all</em> of the files that make up your shapefile (and only those files) and upload it using the button in the left pane.</p>
-<p>
-Once the upload is complete and the server is done processing the file, the name of the .ZIP file will be be suggested as the project name and the fields from the attribute table will be available in the drop down menu labeled <b>Select a stratum field</b>.
-Select the field that contains the stratum identities <em>or</em>, if you are not stratifying, the one with the project name.
-You should also provide a proper name for your project at this point, <em>e.g.</em> "Glassrock Valley Fire Monitoring" or "Coyote Creek Sage-Grouse Habitat"</p>
-<p>After both the name and stratum field are selected, click <b>Update stratum information</b> to continue to the <b>Point Allocation</b> tab.</p>
-<p>The <b>Point Allocation</b> tab is where you tell the tool how to distribute points between your polygons. Most projects use either <em>proportional allocation</em> in which a set number of points will be automatically distributed between the polygons based on their areas or <em>manual allocation</em> in which you specify exactly how many points will be drawn in each stratum. In some cases, you may want <em>equal allocation</em>, in which case every stratum will receive the same number of points.</p>
-<p>Once the design is configured, click the <b>Update point allocation</b> button to submit it.</p>
-<p>Selecting one of the design types will bring up the relevant options for each, including:</p>
-<ul style="list-style: none;">
-    <li><p><b>Panel Names</b>: In all three cases, you need to provide panel names. Panels are just breaking the design into chunks, often used to split a design across multiple years. If you are planning on a single-year design or do not want to break the design into panels, provide just one panel name.</p>
-<p><b>Base Points</b>: Base points are the points that are expected to be sampled over the course of the design.</p>
-<p><b>Base Points Per Panel</b>: The number of base points to allocate to the strata in each panel. If the panels are years, this is effectively the annual sampling effort.</p>
-<p><b>Minimum Base Points Per Stratum Per Panel</b>: If allocating proportionally, every stratum will receive at least this many base points in every panel. Whatever points are left over in the panel after those are assigned are allocated to strata based on their proportional area, <em>e.g.</em> a stratum that makes up 50% of the area will receive 50% of the not-yet-allocated points.</p>
-<p><b>Oversample Points</b>: Effectively "spare" points that can be sampled to make up for base points that end up not being sampled for any reason (safety issues, restricted access, <em>etc.</em>).</p>
-<p><b>Minimum Oversample Points Per Stratum Per Panel</b>: If allocating proportionally or equally, every stratum will receive at least this many oversample points in every panel.</p>
-<p><b>Minimum Oversample Proportion Per Stratum Per Panel</b>: If allocating proportionally or equally, each stratum will get oversample points equal to [number of base points in the stratum]*[minimum oversample proportion], rounded up. If this would mean that a stratum gets fewer than the minimum number of oversample points defined for the design, then that number of points is allocated instead.</p></li>
+
+
+
+
+
+
+
+<div id="upload-a-zipped-polygon-shapefile" class="section level3">
+<h3>1) Upload a zipped polygon shapefile</h3>
+<p>This should be a .ZIP file containing only the components of a single polygon shapefile. For example, if the shapefile were named “rio_grande_strata” the .ZIP would need to contain:</p>
+<ul>
+<li>rio_grande_strata.dbf</li>
+<li>rio_grande_strata.prj</li>
+<li>rio_grande_strata.sbn</li>
+<li>rio_grande_strata.shp</li>
+<li>rio_grande_strata.shx</li>
 </ul>
+</div>
+<div id="name-the-project" class="section level3">
+<h3>2) Name the project</h3>
+<p>This will default to the name of the shapefile, but you can change it to anything composed of only alphanumeric characters and underscores.</p>
+</div>
+<div id="select-a-field-to-stratify-by" class="section level3">
+<h3>3) Select a field to stratify by</h3>
+<p>Your options are the variables/attribute fields in your shapefile. If you aren’t stratifying, use the option “Do not stratify”.</p>
+</div>
+<div id="update-stratification" class="section level3">
+<h3>4) Update stratification</h3>
+<p>Clicking the button will start the next step and kick off background processing to prepare for the draw.</p>
+</div>
+<div id="decide-how-to-allocate-the-points" class="section level3">
+<h3>5) Decide how to allocate the points</h3>
+<p>Select the style of allocation and then the details.</p>
+</div>
+<div id="update-allocation-information" class="section level3">
+<h3>6) Update allocation information</h3>
+<p>Clicking the button commits your decisions and makes it possible to fetch a sample draw. You can still change your allocation, but need to click the button to commit the changes.</p>
+</div>
+<div id="fetch-the-points" class="section level3">
+<h3>7) Fetch the points</h3>
+<p>Clicking the button will generate a sample draw and display it on a map.</p>
+</div>
+<div id="download-the-points" class="section level3">
+<h3>8) Download the points</h3>
+<p>If the design meets expectations, this button will download a .ZIP containing the sample design and everything necessary to recreate it in the future in R without this tool.</p>
+</div>
 
-<p>After the design has been submitted, the <b>Fetch points!</b> button should appear in the left pane. Clicking that will run the design draw points which can be seen in the <b>View Points</b> tab. It will also make the <b>Download points as shapefile</b> button appear in the left pane.</p>
-<p>Clicking <b>Download points as shapefile</b> will download a .ZIP containing:
-The design points as an ESRI shapefile
-The stratification polygons
-An R script containing the code that was used to produce the design points from the polygons and can be used to reproduce them in the future
-</p>
+
+
+<!-- code folding -->
+
+
+
 </body>
-
-
-
 </html>
