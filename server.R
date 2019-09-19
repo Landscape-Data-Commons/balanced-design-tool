@@ -1,4 +1,5 @@
 library(dplyr)
+library(ggplot2)
 library(spdplyr)
 library(leaflet)
 library(viridis)
