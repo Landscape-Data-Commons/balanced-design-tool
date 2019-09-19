@@ -49,7 +49,7 @@ shinyServer(function(input, output, session) {
                  }
                  updateSelectInput(session,
                                    inputId = "strataname",
-                                   choices = unique(c("", fieldnames)),
+                                   choices = unique(c("", "Do not stratify", fieldnames)),
                                    selected = "")
                  updateSelectInput(session,
                                    inputId = "allocation",
@@ -78,8 +78,13 @@ shinyServer(function(input, output, session) {
                                   type = "warning")
                  
                  if (input$strataname != "") {
-                   # Add the relevant values to STRATUM
-                   temp$polygons@data$STRATUM <- as.character(temp$polygons@data[[input$strataname]])
+                   if (input$strataname == "Do not stratify") {
+                     temp$polygons@data$STRATUM <- "Sample frame"
+                   } else {
+                     # Add the relevant values to STRATUM
+                     temp$polygons@data$STRATUM <- as.character(temp$polygons@data[[input$strataname]])
+                   }
+
                    # And also sanitize them WITHOUT PERMISSION
                    temp$polygons@data$STRATUM <- gsub(temp$polygons@data$STRATUM,
                                                       pattern = "\\W",
