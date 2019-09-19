@@ -1,4 +1,5 @@
 library(dplyr)
+library(ggplot2)
 library(spdplyr)
 library(leaflet)
 library(viridis)
@@ -49,7 +50,7 @@ shinyServer(function(input, output, session) {
                  }
                  updateSelectInput(session,
                                    inputId = "strataname",
-                                   choices = unique(c("", fieldnames)),
+                                   choices = unique(c("", "Do not stratify", fieldnames)),
                                    selected = "")
                  updateSelectInput(session,
                                    inputId = "allocation",
@@ -78,8 +79,13 @@ shinyServer(function(input, output, session) {
                                   type = "warning")
                  
                  if (input$strataname != "") {
-                   # Add the relevant values to STRATUM
-                   temp$polygons@data$STRATUM <- as.character(temp$polygons@data[[input$strataname]])
+                   if (input$strataname == "Do not stratify") {
+                     temp$polygons@data$STRATUM <- "Sample frame"
+                   } else {
+                     # Add the relevant values to STRATUM
+                     temp$polygons@data$STRATUM <- as.character(temp$polygons@data[[input$strataname]])
+                   }
+
                    # And also sanitize them WITHOUT PERMISSION
                    temp$polygons@data$STRATUM <- gsub(temp$polygons@data$STRATUM,
                                                       pattern = "\\W",
@@ -119,6 +125,37 @@ shinyServer(function(input, output, session) {
                                    driver = "ESRI Shapefile",
                                    overwrite_layer = TRUE)
                    print(list.files(path = temp$sessiontempdir, pattern = "sample_frame"))
+                   
+                   # Let's make a static map of these!
+                   output$strata_map <- renderPlot(expr = {
+                     # Convert to an sf object so ggplot can work with it
+                     polygons_sf <- as(temp$polygons, "sf")
+                     
+                     # Because of goofy legend garbage, we're going to adjust the aspect ratio
+                     polygons_bb <- sf::st_bbox(polygons_sf)
+                     aspect_ratio <- (polygons_bb[["ymax"]] - polygons_bb[["ymin"]]) / (polygons_bb[["xmax"]] - polygons_bb[["xmin"]])
+                     
+                     # Make the map as just polygons filled by stratum
+                     strata_map <- ggplot(data = polygons_sf) + 
+                       geom_sf(aes(fill = STRATUM)) +
+                       scale_fill_viridis_d() +
+                       theme(panel.background = element_rect(fill = "white",
+                                                             color = "gray90"),
+                             plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                             # Turning off the legend because it's frustratingly bad
+                             # There's no dynamic wrapping, so 90% of the time it clips past the plot boundary
+                             legend.position = "none",
+                             panel.grid = element_blank(),
+                             axis.title = element_blank(),
+                             axis.text = element_blank(),
+                             axis.ticks = element_blank()) +
+                       # Sometimes the legend would be too wide and get clipped, so we'll force it to be narrower
+                       guides(fill = guide_legend(title = NULL,
+                                                  ncol = 3))
+                     
+                     strata_map
+                   })
+                   
                    
                    # Jump to the map, but only if it won't drag the user away from the allocation tab
                    if (!(input$maintabs == "Point Allocation" & input$allocation != "")) {
@@ -444,7 +481,7 @@ shinyServer(function(input, output, session) {
                    map <- addTiles(map = map)
                    # Make a strata palette to use for the map
                    strata_palette <- colorFactor(palette = "viridis",
-                                                 levels = unique(temp$polygons@data[["STRATUM"]]))
+                                                 levels = sort(unique(temp$polygons@data[["STRATUM"]])))
                    # Add the stratification polygons
                    map <- addPolygons(map = map,
                                       data = sp::spTransform(temp$polygons,
@@ -464,13 +501,13 @@ shinyServer(function(input, output, session) {
                                            radius = 3)
                    
                    # Add in a legend for the strata!
-                   map <-   addLegend(map = map,
-                                      position = "topright",
-                                      pal = strata_palette,
-                                      values = ~STRATUM,
-                                      data = temp$polygons,
-                                      title = "Strata",
-                                      opacity = 1)
+                   map <- addLegend(map = map,
+                                    position = "topright",
+                                    pal = strata_palette,
+                                    values = ~STRATUM,
+                                    data = temp$polygons,
+                                    title = "Strata",
+                                    opacity = 1)
                    
                    map
                  })
@@ -623,7 +660,8 @@ shinyServer(function(input, output, session) {
                   pattern = "\\W",
                   replacement = ""),
              "_results_",
-             format(Sys.Date(), "%Y%m%d"),
+             paste0(format(Sys.Date(), "%Y-%m-%d"),
+                    format(Sys.time(), "T%H%MZ", tz = "GMT")),
              ".zip")
     },
     content = function(file) {

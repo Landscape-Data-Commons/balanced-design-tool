@@ -1,0 +1,38 @@
+---
+output:
+  html_document:
+        theme: null
+        highlight: null
+        mathjax: null
+---
+### 1) Upload a zipped polygon shapefile
+This should be a .ZIP file containing only the components of a single polygon shapefile. For example, if the shapefile were named "rio_grande_strata" the .ZIP would need to contain:
+
+  - rio_grande_strata.dbf
+  - rio_grande_strata.prj
+  - rio_grande_strata.sbn
+  - rio_grande_strata.shp
+  - rio_grande_strata.shx
+
+### 2) Name the project
+This will default to the name of the shapefile, but you can change it to anything composed of only alphanumeric characters and underscores.
+
+### 3) Select a field to stratify by
+Your options are the variables/attribute fields in your shapefile. If you aren't stratifying, use the option "Do not stratify".
+
+### 4) Update stratification
+Clicking the button will start the next step and kick off background processing to prepare for the draw.
+
+### 5) Decide how to allocate the points
+Select the style of allocation and then the details.
+
+### 6) Update allocation information
+Clicking the button commits your decisions and makes it possible to fetch a sample draw. You can still change your allocation, but need to click the button to commit the changes.
+
+### 7) Fetch the points
+Clicking the button will generate a sample draw and display it on a map.
+
+### 8) Download the points
+If the design meets expectations, this button will download a .ZIP containing the sample design and everything necessary to recreate it in the future in R without this tool.
+
+

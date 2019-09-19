@@ -81,6 +81,8 @@ fluidPage(
         
         tabPanel(title = "Point Allocation",
                  column(width = 6,
+                        # This is just a buffer to make things prettier
+                        helpText(""),
                         selectInput(inputId = "allocation",
                                     label = "Allocate points proportionally by strata areas, equally across strata, or manually:",
                                     choices = c(""),
@@ -88,35 +90,36 @@ fluidPage(
                         numericInput(inputId = "seednum",
                                      label = "Seed number for reproducibility:",
                                      value = 420,
-                                     min = 0)
+                                     min = 0),
+                        conditionalPanel(condition = "input.allocation != ''",
+                                         conditionalPanel(condition = "input.panelnames == '' && input.allocation != ''",
+                                                          helpText("Panel names are still required")),
+                                         textInput(inputId = "panelnames",
+                                                   label = "Names of the panels, separated by commas",
+                                                   value = ""),
+                                         # helpText("Enter the number of points to draw."),
+                                         uiOutput("basecount"),
+                                         uiOutput("minimumbase"),
+                                         uiOutput("oversamplemin"),
+                                         conditionalPanel(condition = "input.allocation == 'Manually'",
+                                                          tagList(
+                                                            column(width = 6,
+                                                                   helpText("Number of base points per panel"),
+                                                                   tags$div(id = 'mabase')),
+                                                            column(width = 6,
+                                                                   helpText("Number of oversample points per panel"),
+                                                                   tags$div(id = 'maover'))
+                                                          )
+                                         )
+                        )
                         ),
                  column(width = 4,
-                        conditionalPanel(condition = "input.panelnames == '' && input.allocation != ''",
-                                         helpText("Panel names are still required")),
                         conditionalPanel(condition = "input.allocation != '' && input.panelnames != ''",
                                          helpText("Once you've finished setting the allocation for points, click the button below to store the design scheme"),
                                          actionButton("allocated", "Update point allocation"),
                                          helpText("After updating the design scheme, click the 'Fetch points!' button on the left to draw your points.")
-                        )
-                 ),
-                 conditionalPanel(condition = "input.allocation != ''",
-                                  textInput(inputId = "panelnames",
-                                            label = "Names of the panels, separated by commas",
-                                            value = ""),
-                                  helpText("Enter the number of points to draw."),
-                                  uiOutput("basecount"),
-                                  uiOutput("minimumbase"),
-                                  uiOutput("oversamplemin"),
-                                  conditionalPanel(condition = "input.allocation == 'Manually'",
-                                                   tagList(
-                                                     column(width = 6,
-                                                            helpText("Number of base points per panel"),
-                                                            tags$div(id = 'mabase')),
-                                                     column(width = 6,
-                                                            helpText("Number of oversample points per panel"),
-                                                            tags$div(id = 'maover'))
-                                                   )
-                                  )
+                        ),
+                        plotOutput(outputId = "strata_map")
                  )
                  
         ),
@@ -133,6 +136,9 @@ fluidPage(
         ),
         tabPanel("About",
                  includeHTML("about.html"))
+        ,
+        tabPanel("Glossary",
+                 includeHTML("glossary.html"))
       )
     )
   )
