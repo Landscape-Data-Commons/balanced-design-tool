@@ -136,6 +136,9 @@ fluidPage(
         ),
         tabPanel("About",
                  includeHTML("about.html"))
+        ,
+        tabPanel("Glossary",
+                 includeHTML("glossary.html"))
       )
     )
   )
