@@ -1,0 +1,23 @@
+---
+output:
+  html_document:
+        theme: null
+        highlight: null
+        mathjax: null
+---
+
+This tool is a uses the implementation of the Generalized Random Tesselation Stratified (GRTS) algorithm from [spsurvey](https://cran.r-project.org/package=spsurvey) to draw spatially balanced sample designs.
+
+To report bugs, contact Nelson Stauffer at nelson.stauffer@ars.usda.gov or open an issue in the [GitHub repository](https://github.com/nstauffer/balanced-design-tool).
+
+The packages used are:
+
+  - [ggplot2](https://cran.r-project.org/package=ggplot2)
+  - [leaflet](https://cran.r-project.org/package=leaflet)
+  - [dplyr](https://cran.r-project.org/package=dplyr)
+  - [rgdal](https://cran.r-project.org/package=rgdal)
+  - [sf](https://cran.r-project.org/package=sf)
+  - [shiny](https://cran.r-project.org/package=shiny)
+  - [spdplyr](https://cran.r-project.org/package=spdplyr)
+  - [spsurvey](https://cran.r-project.org/package=spsurvey)
+  - [viridis](https://cran.r-project.org/package=viridis)
