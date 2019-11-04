@@ -175,16 +175,7 @@ shinyServer(function(input, output, session) {
                    #   temp$polygons <- area.add(temp$polygons,
                    #                             area.sqkm = FALSE)
                    # }
-                   
-                   
-                   # Write this file out to use in spsurvey::grts()
-                   # This shouldn't be necessary anymore, but I'm afraid to break things I'll have to fix at this point
-                   rgdal::writeOGR(obj = temp$polygons[,"STRATUM"],
-                                   dsn = temp$sessiontempdir,
-                                   layer = "sample_frame",
-                                   driver = "ESRI Shapefile",
-                                   overwrite_layer = TRUE)
-                   print(list.files(path = temp$sessiontempdir, pattern = "sample_frame"))
+
                    
                    # Let's make a static map of these!
                    output$strata_map <- renderPlot(expr = {
