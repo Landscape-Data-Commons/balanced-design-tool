@@ -178,34 +178,34 @@ shinyServer(function(input, output, session) {
 
                    
                    # Let's make a static map of these!
-                   output$strata_map <- renderPlot(expr = {
-                     # Convert to an sf object so ggplot can work with it
-                     polygons_sf <- as(temp$polygons, "sf")
-                     
-                     # Because of goofy legend garbage, we're going to adjust the aspect ratio
-                     polygons_bb <- sf::st_bbox(polygons_sf)
-                     aspect_ratio <- (polygons_bb[["ymax"]] - polygons_bb[["ymin"]]) / (polygons_bb[["xmax"]] - polygons_bb[["xmin"]])
-                     
-                     # Make the map as just polygons filled by stratum
-                     strata_map <- ggplot(data = polygons_sf) + 
-                       geom_sf(aes(fill = STRATUM)) +
-                       scale_fill_viridis_d() +
-                       theme(panel.background = element_rect(fill = "white",
-                                                             color = "gray90"),
-                             plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                             # Turning off the legend because it's frustratingly bad
-                             # There's no dynamic wrapping, so 90% of the time it clips past the plot boundary
-                             legend.position = "none",
-                             panel.grid = element_blank(),
-                             axis.title = element_blank(),
-                             axis.text = element_blank(),
-                             axis.ticks = element_blank()) +
-                       # Sometimes the legend would be too wide and get clipped, so we'll force it to be narrower
-                       guides(fill = guide_legend(title = NULL,
-                                                  ncol = 3))
-                     
-                     strata_map
-                   })
+                   # output$strata_map <- renderPlot(expr = {
+                   #   # Convert to an sf object so ggplot can work with it
+                   #   polygons_sf <- as(temp$polygons, "sf")
+                   #   
+                   #   # Because of goofy legend garbage, we're going to adjust the aspect ratio
+                   #   polygons_bb <- sf::st_bbox(polygons_sf)
+                   #   aspect_ratio <- (polygons_bb[["ymax"]] - polygons_bb[["ymin"]]) / (polygons_bb[["xmax"]] - polygons_bb[["xmin"]])
+                   #   
+                   #   # Make the map as just polygons filled by stratum
+                   #   strata_map <- ggplot(data = polygons_sf) + 
+                   #     geom_sf(aes(fill = STRATUM)) +
+                   #     scale_fill_viridis_d() +
+                   #     theme(panel.background = element_rect(fill = "white",
+                   #                                           color = "gray90"),
+                   #           plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                   #           # Turning off the legend because it's frustratingly bad
+                   #           # There's no dynamic wrapping, so 90% of the time it clips past the plot boundary
+                   #           legend.position = "none",
+                   #           panel.grid = element_blank(),
+                   #           axis.title = element_blank(),
+                   #           axis.text = element_blank(),
+                   #           axis.ticks = element_blank()) +
+                   #     # Sometimes the legend would be too wide and get clipped, so we'll force it to be narrower
+                   #     guides(fill = guide_legend(title = NULL,
+                   #                                ncol = 3))
+                   #   
+                   #   strata_map
+                   # })
                    
                    
                    # Jump to the map, but only if it won't drag the user away from the allocation tab
