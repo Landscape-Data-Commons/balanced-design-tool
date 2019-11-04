@@ -544,7 +544,7 @@ shinyServer(function(input, output, session) {
                    
                    message(paste0("There are ", length(temp$polygons[["STRATUM"]]), " stratum entries"))
                    message(class(temp$polygons))
-                   # message(paste(temp$polygons[["STRATUM"]], collapse = ", "))
+                   
                    missing_from_polys <- temp$polygons[["STRATUM"]][!(temp$polygons[["STRATUM"]] %in% names(temp$design))]
                    missing_from_do <- names(temp$design)[!(names(temp$design) %in% temp$polygons[["STRATUM"]])]
                    if (length(missing_from_polys) > 0) {
