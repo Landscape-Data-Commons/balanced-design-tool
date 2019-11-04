@@ -5,6 +5,45 @@
 # library(rgdal)
 # library(spsurvey)
 
+repair_geometry <- function(polygons,
+                            verbose = FALSE) {
+  if(class(polygons) == "SpatialPolygonsDataFrame") {
+    polygons_sf <- sf::st_as_sf(polygons)
+    spdf <- TRUE
+  } else if ("sf" %in% class(polygons)) {
+    polygons_sf <- polygons
+    spdf <- FALSE
+  } else {
+    stop("polygons must either be a spatial polygons data frame or an sf object")
+  }
+  
+  validity_check <- sf::st_is_valid(polygons_sf)
+  
+  if (any(is.na(validity_check))) {
+    stop("The geometry of the polygons is corrupt. Unable to repair.")
+  }
+  
+  if (!all(validity_check)) {
+    if (verbose) {
+      message("Invalid geometry found. Attempting to repair.")
+    }
+    output <- sf::st_buffer(x = polygons_sf,
+                            dist = 0)
+  } else {
+    if (verbose) {
+      message("No invalid geometry found.")
+    }
+    output <- polygons_sf
+  }
+  
+  if (spdf) {
+    output <- methods::as(output, "Spatial")
+  }
+  
+  return(output)
+}
+
+
 #' Add areas to a Spatial Polygons Data Frame
 #'
 #' This function takes a Spatial Polygons Data Frame and calculates and adds area fields to the data frame. Areas can be calculated either treating the whole SPDF as a unit or for each polygon individually.
@@ -158,8 +197,7 @@ grts.custom <- function(design_object,
                                  sp.object = sp_object,
                                  in.shape = in_shape,
                                  stratum = stratum_field,
-                                 shapefile = FALSE
-  )
+                                 shapefile = FALSE)
   
   ## Assign projection info to the sample sites SPDF
   if (!is.null(sp_object)) {

@@ -44,10 +44,64 @@ shinyServer(function(input, output, session) {
                                     closeButton = TRUE,
                                     id = "polygonserror",
                                     type = "warning")
-                   # fieldnames <- "No valid single shapefile found"
                  } else {
                    fieldnames <- names(temp$polygons@data)
                  }
+                 
+                 if (input$repair) {
+                   polygons_sf <- sf::st_as_sf(temp$polygons)
+                   
+                   
+                   validity_check <- sf::st_is_valid(polygons_sf)
+                   
+                   if (any(is.na(validity_check))) {
+                     showNotification(ui = "The geometry of the polygons is corrupt. Unable to repair. Please correct shapefile geometry and reupload.",
+                                      duration = NULL,
+                                      closeButton = TRUE,
+                                      id = "corruption",
+                                      type = "error")
+                   } else if (!all(validity_check)) {
+                     showNotification(ui = "Invalid geometry found. Attempting to repair. If this takes more than five minutes, you may want to attempt to repair the geometry yourself by buffering with a distance of 0 and reupload.",
+                                      duration = NULL,
+                                      closeButton = FALSE,
+                                      id = "invalid",
+                                      type = "warning")
+                     polygons_repaired <- sf::st_buffer(x = polygons_sf,
+                                                        dist = 0)
+                     validity_check <- sf::st_is_valid(polygons_repaired)
+                     
+                     removeNotification(id = "invalid")
+                     if (any(is.na(validity_check))) {
+                       showNotification(ui = "The repair attempt failed and some geometry of the polygons is now corrupt. Please correct shapefile geometry and reupload.",
+                                        duration = NULL,
+                                        closeButton = TRUE,
+                                        id = "repair_corrupt",
+                                        type = "error")
+                     } else if (!all(na.omit(validity_check))) {
+                       showNotification(ui = "The repair attempt failed and some geometry of the polygons is still invalid. Please correct shapefile geometry and reupload.",
+                                        duration = NULL,
+                                        closeButton = TRUE,
+                                        id = "repair_invalid",
+                                        type = "error")
+                     } else {
+                       showNotification(ui = "The geometry of the polygons was successfully repaired.",
+                                        duration = NULL,
+                                        closeButton = TRUE,
+                                        id = "repair_success",
+                                        type = "message")
+                     }
+                     
+                     temp$polygons <- methods::as(polygons_repaired, "Spatial")
+                   } else {
+                     showNotification(ui = "The geometry of the polygons is valid and does not require repair.",
+                                      duration = NULL,
+                                      closeButton = TRUE,
+                                      id = "valid",
+                                      type = "message")
+                   }
+                 }
+                 
+                 
                  updateSelectInput(session,
                                    inputId = "strataname",
                                    choices = unique(c("", "Do not stratify", fieldnames)),
@@ -85,7 +139,7 @@ shinyServer(function(input, output, session) {
                      # Add the relevant values to STRATUM
                      temp$polygons@data$STRATUM <- as.character(temp$polygons@data[[input$strataname]])
                    }
-
+                   
                    # And also sanitize them WITHOUT PERMISSION
                    temp$polygons@data$STRATUM <- gsub(temp$polygons@data$STRATUM,
                                                       pattern = "\\W",
@@ -93,68 +147,65 @@ shinyServer(function(input, output, session) {
                    
                    # This bit is shamelessly stolen from another one of my packages
                    # It'll dissolve the polygons by strata if they aren't already
-                   unique_ids <- as.character(unique(temp$polygons@data[["STRATUM"]]))
-                   if (length(unique_ids) > nrow(temp$polygons@data)) {
-                     poly_list <- lapply(X = unique_ids,
-                                         polygons = temp$polygons,
-                                         dissolve_field = "STRATUM",
-                                         FUN = function(X, polygons, dissolve_field){
-                                           polygons_current <- polygons[polygons@data[[dissolve_field]] == X, ]
-                                           polygons_current <- methods::as(sf::st_combine(sf::st_as_sf(polygons_current)), "Spatial")
-                                           df <- data.frame(id = X,
-                                                            stringsAsFactors = FALSE)
-                                           names(df) <- dissolve_field
-                                           rownames(df) <- polygons_current@polygons[[1]]@ID
-                                           polygons_current <- sp::SpatialPolygonsDataFrame(Sr = polygons_current,
-                                                                                            data = df)
-                                           return(polygons_current)
-                                         })
-                     temp$polygons <- do.call(rbind,
-                                              poly_list)
-                     
-                     temp$polygons <- area.add(temp$polygons,
-                                               area.sqkm = FALSE)
-                   }
-                   
-                   
-                   # Write this file out to use in spsurvey::grts()
-                   # This shouldn't be necessary anymore, but I'm afraid to break things I'll have to fix at this point
-                   rgdal::writeOGR(obj = temp$polygons[,"STRATUM"],
-                                   dsn = temp$sessiontempdir,
-                                   layer = "sample_frame",
-                                   driver = "ESRI Shapefile",
-                                   overwrite_layer = TRUE)
-                   print(list.files(path = temp$sessiontempdir, pattern = "sample_frame"))
+                   # unique_ids <- as.character(unique(temp$polygons@data[["STRATUM"]]))
+                   # if (length(unique_ids) < nrow(temp$polygons@data)) {
+                   #   showNotification(ui = "The attribute table has at least one stratum with more than one entry and the polygons will be dissolved by stratum. If this causes errors when fetching points, please upload polygons that are already dissolved by stratum.",
+                   #                    duration = NULL,
+                   #                    closeButton = TRUE,
+                   #                    id = "dissolve",
+                   #                    type = "message")
+                   #   
+                   #   poly_list <- lapply(X = unique_ids,
+                   #                       polygons = temp$polygons,
+                   #                       dissolve_field = "STRATUM",
+                   #                       FUN = function(X, polygons, dissolve_field){
+                   #                         polygons_current <- polygons[polygons@data[[dissolve_field]] == X, ]
+                   #                         polygons_current <- methods::as(sf::st_combine(sf::st_as_sf(polygons_current)), "Spatial")
+                   #                         df <- data.frame(id = X,
+                   #                                          stringsAsFactors = FALSE)
+                   #                         names(df) <- dissolve_field
+                   #                         rownames(df) <- polygons_current@polygons[[1]]@ID
+                   #                         polygons_current <- sp::SpatialPolygonsDataFrame(Sr = polygons_current,
+                   #                                                                          data = df)
+                   #                         return(polygons_current)
+                   #                       })
+                   #   temp$polygons <- do.call(rbind,
+                   #                            poly_list)
+                   #   
+                   #   temp$polygons <- area.add(temp$polygons,
+                   #                             area.sqkm = FALSE)
+                   # }
+
                    
                    # Let's make a static map of these!
-                   output$strata_map <- renderPlot(expr = {
-                     # Convert to an sf object so ggplot can work with it
-                     polygons_sf <- as(temp$polygons, "sf")
-                     
-                     # Because of goofy legend garbage, we're going to adjust the aspect ratio
-                     polygons_bb <- sf::st_bbox(polygons_sf)
-                     aspect_ratio <- (polygons_bb[["ymax"]] - polygons_bb[["ymin"]]) / (polygons_bb[["xmax"]] - polygons_bb[["xmin"]])
-                     
-                     # Make the map as just polygons filled by stratum
-                     strata_map <- ggplot(data = polygons_sf) + 
-                       geom_sf(aes(fill = STRATUM)) +
-                       scale_fill_viridis_d() +
-                       theme(panel.background = element_rect(fill = "white",
-                                                             color = "gray90"),
-                             plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                             # Turning off the legend because it's frustratingly bad
-                             # There's no dynamic wrapping, so 90% of the time it clips past the plot boundary
-                             legend.position = "none",
-                             panel.grid = element_blank(),
-                             axis.title = element_blank(),
-                             axis.text = element_blank(),
-                             axis.ticks = element_blank()) +
-                       # Sometimes the legend would be too wide and get clipped, so we'll force it to be narrower
-                       guides(fill = guide_legend(title = NULL,
-                                                  ncol = 3))
-                     
-                     strata_map
-                   })
+                   # output$strata_map <- renderPlot(expr = {
+                   #   # Convert to an sf object so ggplot can work with it
+                   #   polygons_sf <- as(temp$polygons, "sf")
+                   #   
+                   #   # Because of goofy legend garbage, we're going to adjust the aspect ratio
+                   #   polygons_bb <- sf::st_bbox(polygons_sf)
+                   #   aspect_ratio <- (polygons_bb[["ymax"]] - polygons_bb[["ymin"]]) / (polygons_bb[["xmax"]] - polygons_bb[["xmin"]])
+                   #   
+                   #   # Make the map as just polygons filled by stratum
+                   #   strata_map <- ggplot(data = polygons_sf) + 
+                   #     geom_sf(aes(fill = STRATUM)) +
+                   #     scale_fill_viridis_d() +
+                   #     theme(panel.background = element_rect(fill = "white",
+                   #                                           color = "gray90"),
+                   #           plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                   #           # Turning off the legend because it's frustratingly bad
+                   #           # There's no dynamic wrapping, so 90% of the time it clips past the plot boundary
+                   #           legend.position = "none",
+                   #           panel.grid = element_blank(),
+                   #           axis.title = element_blank(),
+                   #           axis.text = element_blank(),
+                   #           axis.ticks = element_blank()) +
+                   #     # Sometimes the legend would be too wide and get clipped, so we'll force it to be narrower
+                   #     guides(fill = guide_legend(title = NULL,
+                   #                                ncol = 3))
+                   #   
+                   #   strata_map
+                   # })
                    
                    
                    # Jump to the map, but only if it won't drag the user away from the allocation tab
@@ -261,123 +312,146 @@ shinyServer(function(input, output, session) {
   # When the user clicks the button indicating that they're done with their point allocation, generate a design object
   observeEvent(eventExpr = input$allocated,
                handlerExpr = {
-                 # Display a busy message
-                 showNotification(ui = "Creating design object.",
-                                  duration = NULL,
-                                  closeButton = FALSE,
-                                  id = "busy",
-                                  type = "warning")
-                 
-                 print(input$allocation)
-                 # This gets a vector of the individual panel names from the string that the user entered
-                 temp$panels <- unique(stringr::str_trim(unlist(stringr::str_split(input$panelnames,
-                                                                                   pattern = ","))))
-                 message(temp$panels)
-                 # Sanitize the panel names
-                 temp$panels <- sapply(temp$panels,
-                                       gsub,
-                                       pattern = "\\W",
-                                       replacement = "")
-                 
-                 if (input$allocation == "Manually") {
-                   # Get all the inputs because I can't just slice them out all at once from a reactive list
-                   temp$inputs <- c()
-                   for (id in c(temp$ui.lut$base, temp$ui.lut$over)) {
-                     temp$inputs <- c(temp$inputs, input[[id]])
+                 # OKAY! So sometimes people might accidentally ask for more point according to minbase * stratum count than they allow for in basecount
+                 # This gives them an error if that happens instead of crashing the tool.
+                 if (input$allocation == "Proportionally") {
+                   if ((length(unique(temp$polygons[["STRATUM"]])) * input$minbase) > input$basecount) {
+                     pointcounts_valid <- FALSE
+                     showNotification(ui = paste0("Your target number of base points is ", input$basecount,
+                                                  " but with ", length(unique(temp$polygons[["STRATUM"]])),
+                                                  " strata and a minimum of ", input$minbase,
+                                                  " base points per stratum you'd need ", length(unique(temp$polygons[["STRATUM"]])) * input$minbase,
+                                                  " base points. Increase your total base point count, decrease the minimum point count per stratum, or decrease the number of strata."),
+                                      duration = NULL,
+                                      closeButton = TRUE,
+                                      id = "bad_pointcount",
+                                      type = "error")
+                   } else {
+                     pointcounts_valid <- TRUE
                    }
-                   temp$inputs <- setNames(temp$inputs,
-                                           c(temp$ui.lut$base, temp$ui.lut$over))
-                   # Build the design object
-                   temp$design <- lapply(temp$ui.lut$STRATUM,
-                                         ui.lut = temp$ui.lut,
-                                         panel.names = temp$panels,
-                                         input = temp$inputs,
-                                         function(X, ui.lut, panel.names, input){
-                                           # How many panels?
-                                           panel_count <- length(panel.names)
-                                           # Get those counts
-                                           base_counts <- rep(input[ui.lut$base[ui.lut$STRATUM == X]],
-                                                              times = panel_count)
-                                           # Oversample count
-                                           over_count <- input[ui.lut$over[ui.lut$STRATUM == X]] * panel_count
-                                           
-                                           list(panel = setNames(base_counts,
-                                                                 panel.names),
-                                                seltype = "Equal",
-                                                over = over_count)
-                                         })
-                   
-                   # Set the names of that list
-                   temp$design <- setNames(temp$design,
-                                           temp$ui.lut$STRATUM)
-                   
-                   output$design <- renderText({
-                     paste(temp$design)
-                   })
                  } else {
-                   if (input$allocation == "Proportionally") {
-                     sizes <- dplyr::summarize(dplyr::group_by(temp$polygons@data, STRATUM),
-                                               AREA = sum(AREA.HA))
-                     basecount <- input$basecount
-                     minbase <- input$minbase
-                     minoversample <- input$minoversample
-                     minoversampleproportion <- input$minoversampleproportion
-                   }
-                   if (input$allocation == "Equally") {
-                     sizes <- data.frame(STRATUM = temp$polygons@data$STRATUM,
-                                         AREA = rep(1,
-                                                    times = length(unique(temp$polygons@data$STRATUM))))
-                     basecount <- input$basecount
-                     minbase <- 0
-                     minoversample <- input$minoversample
-                     minoversampleproportion <- input$minoversampleproportion
-                   }
-                   temp$design <- allocate.panels(stratum.sizes = sizes,
-                                                  panel.number = length(temp$panels),
-                                                  panel.names = temp$panels,
-                                                  panel.sample.size = basecount,
-                                                  points.min = minbase,
-                                                  oversample.proportion = minoversampleproportion,
-                                                  oversample.min = minoversample)
-                   output$design <- renderText({
-                     paste(temp$design)
-                   })
-                   print(temp$design)
+                   pointcounts_valid <- TRUE
                  }
-                 # Create a string version of the design object to write out
-                 temp$design.string <- paste(paste0("'",
-                                                    names(temp$design), "' = ",
-                                                    gsub(paste0(as.character(temp$design)),
-                                                         pattern = "\\\"",
-                                                         replacement = "'")),
-                                             collapse = ",")
+                 if (pointcounts_valid) {
+                   # Display a busy message
+                   showNotification(ui = "Creating design object.",
+                                    duration = NULL,
+                                    closeButton = FALSE,
+                                    id = "busy",
+                                    type = "warning")
+                   
+                   print(input$allocation)
+                   # This gets a vector of the individual panel names from the string that the user entered
+                   temp$panels <- unique(stringr::str_trim(unlist(stringr::str_split(input$panelnames,
+                                                                                     pattern = ","))))
+                   message(temp$panels)
+                   # Sanitize the panel names
+                   temp$panels <- sapply(temp$panels,
+                                         gsub,
+                                         pattern = "\\W",
+                                         replacement = "")
+                   
+                   if (input$allocation == "Manually") {
+                     # Get all the inputs because I can't just slice them out all at once from a reactive list
+                     temp$inputs <- c()
+                     for (id in c(temp$ui.lut$base, temp$ui.lut$over)) {
+                       temp$inputs <- c(temp$inputs, input[[id]])
+                     }
+                     temp$inputs <- setNames(temp$inputs,
+                                             c(temp$ui.lut$base, temp$ui.lut$over))
+                     # Build the design object
+                     temp$design <- lapply(temp$ui.lut$STRATUM,
+                                           ui.lut = temp$ui.lut,
+                                           panel.names = temp$panels,
+                                           input = temp$inputs,
+                                           function(X, ui.lut, panel.names, input){
+                                             # How many panels?
+                                             panel_count <- length(panel.names)
+                                             # Get those counts
+                                             base_counts <- rep(input[ui.lut$base[ui.lut$STRATUM == X]],
+                                                                times = panel_count)
+                                             # Oversample count
+                                             over_count <- input[ui.lut$over[ui.lut$STRATUM == X]] * panel_count
+                                             
+                                             list(panel = setNames(base_counts,
+                                                                   panel.names),
+                                                  seltype = "Equal",
+                                                  over = over_count)
+                                           })
+                     
+                     # Set the names of that list
+                     temp$design <- setNames(temp$design,
+                                             temp$ui.lut$STRATUM)
+                     
+                     output$design <- renderText({
+                       paste(temp$design)
+                     })
+                   } else {
+                     if (input$allocation == "Proportionally") {
+                       sizes <- dplyr::summarize(dplyr::group_by(temp$polygons@data, STRATUM),
+                                                 AREA = sum(AREA.HA))
+                       basecount <- input$basecount
+                       minbase <- input$minbase
+                       minoversample <- input$minoversample
+                       minoversampleproportion <- input$minoversampleproportion
+                     }
+                     if (input$allocation == "Equally") {
+                       sizes <- data.frame(STRATUM = temp$polygons@data$STRATUM,
+                                           AREA = rep(1,
+                                                      times = length(unique(temp$polygons@data$STRATUM))))
+                       basecount <- input$basecount
+                       minbase <- 0
+                       minoversample <- input$minoversample
+                       minoversampleproportion <- input$minoversampleproportion
+                     }
+                     temp$design <- allocate.panels(stratum.sizes = sizes,
+                                                    panel.number = length(temp$panels),
+                                                    panel.names = temp$panels,
+                                                    panel.sample.size = basecount,
+                                                    points.min = minbase,
+                                                    oversample.proportion = minoversampleproportion,
+                                                    oversample.min = minoversample)
+                     output$design <- renderText({
+                       paste(temp$design)
+                     })
+                     print(temp$design)
+                   }
+                   # Create a string version of the design object to write out
+                   temp$design.string <- paste(paste0("'",
+                                                      names(temp$design), "' = ",
+                                                      gsub(paste0(as.character(temp$design)),
+                                                           pattern = "\\\"",
+                                                           replacement = "'")),
+                                               collapse = ",")
+                   
+                   # Add the panel names to temp$design.string because they were lost in the process
+                   temp$strata.panels <- unlist(stringr::str_extract_all(string = temp$design.string,
+                                                                         pattern = "panel = c[(](\\d|,| ){1,1000}[)]"))
+                   for (stratum in temp$strata.panels) {
+                     # I'll revisit this to make it prettier. Removing the piping was the priority in the meantime
+                     # Given that this works, I'm disinclined to touch it anymore
+                     # The point is that it makes a version of the design object that can be pasted into the output sample_script.R and Just Work(TM)
+                     temp$design.string <- gsub(temp$design.string,
+                                                pattern = gsub(gsub(stratum,
+                                                                    pattern = "[(]",
+                                                                    replacement = "[(]"),
+                                                               pattern = "[)]",
+                                                               replacement = "[)]"),
+                                                replacement = paste0("panel = c(",
+                                                                     paste(gsub(paste0("'",
+                                                                                       temp$panels,
+                                                                                       "'=",
+                                                                                       stringr::str_extract_all(string = stratum,
+                                                                                                                pattern = "\\d{1,4}")[[1]]),
+                                                                                pattern = "\\\"",
+                                                                                replacement = ""),
+                                                                           collapse = ","),
+                                                                     ")"))
+                   }
+                   # Remove the busy notification
+                   removeNotification(id = "busy")
+                 }
                  
-                 # Add the panel names to temp$design.string because they were lost in the process
-                 temp$strata.panels <- unlist(stringr::str_extract_all(string = temp$design.string,
-                                                                       pattern = "panel = c[(](\\d|,| ){1,1000}[)]"))
-                 for (stratum in temp$strata.panels) {
-                   # I'll revisit this to make it prettier. Removing the piping was the priority in the meantime
-                   # Given that this works, I'm disinclined to touch it anymore
-                   # The point is that it makes a version of the design object that can be pasted into the output sample_script.R and Just Work(TM)
-                   temp$design.string <- gsub(temp$design.string,
-                                              pattern = gsub(gsub(stratum,
-                                                                  pattern = "[(]",
-                                                                  replacement = "[(]"),
-                                                             pattern = "[)]",
-                                                             replacement = "[)]"),
-                                              replacement = paste0("panel = c(",
-                                                                   paste(gsub(paste0("'",
-                                                                                     temp$panels,
-                                                                                     "'=",
-                                                                                     stringr::str_extract_all(string = stratum,
-                                                                                                              pattern = "\\d{1,4}")[[1]]),
-                                                                              pattern = "\\\"",
-                                                                              replacement = ""),
-                                                                         collapse = ","),
-                                                                   ")"))
-                 }
-                 # Remove the busy notification
-                 removeNotification(id = "busy")
                })
   
   # When the user clicks the fetch button, generate points from the design object
@@ -467,6 +541,22 @@ shinyServer(function(input, output, session) {
                        file = paste0(temp$sessiontempdir, "/sample_script.R"),
                        sep = "\n",
                        append = TRUE)
+                   
+                   message(paste0("There are ", length(temp$polygons[["STRATUM"]]), " stratum entries"))
+                   message(class(temp$polygons))
+                   
+                   missing_from_polys <- temp$polygons[["STRATUM"]][!(temp$polygons[["STRATUM"]] %in% names(temp$design))]
+                   missing_from_do <- names(temp$design)[!(names(temp$design) %in% temp$polygons[["STRATUM"]])]
+                   if (length(missing_from_polys) > 0) {
+                     message("The following strata are missing from the design object: ", paste(missing_from_polys, collapse = ", "))
+                   } else {
+                     message("All strata from the polygons appear in the design object")
+                   }
+                   if (length(missing_from_do) > 0) {
+                     message("The following strata are missing from the polygons", paste(missing_from_do, collapse = ", "))
+                   } else {
+                     message("All strata from the design object appear in the polygons")
+                   }
                    
                    # Generate the points
                    temp$points <- grts.gen()
@@ -614,6 +704,7 @@ shinyServer(function(input, output, session) {
                                              pattern = "\\W",
                                              replacement = ""),
                           sp_object = temp$polygons,
+                          stratum_field = "STRATUM",
                           seed_number = input$seednum
     )
     

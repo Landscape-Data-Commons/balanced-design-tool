@@ -2,6 +2,7 @@ library(shiny)
 
 fluidPage(
   # This changes the position and styling of the notification
+  # Old RGB: 204,169,44
   tags$head(
     tags$style(
       HTML(
@@ -12,32 +13,32 @@ fluidPage(
           width: calc(25%);
           opacity: 1;
           font-weight: bold;
-          box-shadow: 0 0 0 rgba(204,169,44, 0.4);
+          box-shadow: 0 0 0 rgba(181,181,181, 0.4);
           animation: pulse 2s infinite;
         }
         @-webkit-keyframes pulse {
           0% {
-            -webkit-box-shadow: 0 0 0 0 rgba(204,169,44, 0.4);
+            -webkit-box-shadow: 0 0 0 0 rgba(181,181,181, 0.4);
           }
           70% {
-            -webkit-box-shadow: 0 0 0 10px rgba(204,169,44, 0);
+            -webkit-box-shadow: 0 0 0 10px rgba(181,181,181, 0);
           }
           100% {
-            -webkit-box-shadow: 0 0 0 0 rgba(204,169,44, 0);
+            -webkit-box-shadow: 0 0 0 0 rgba(181,181,181, 0);
           }
         }
         @keyframes pulse {
           0% {
-            -moz-box-shadow: 0 0 0 0 rgba(204,169,44, 0.4);
-            box-shadow: 0 0 0 0 rgba(204,169,44, 0.4);
+            -moz-box-shadow: 0 0 0 0 rgba(181,181,181, 0.4);
+            box-shadow: 0 0 0 0 rgba(181,181,181, 0.4);
           }
           70% {
-            -moz-box-shadow: 0 0 0 10px rgba(204,169,44, 0);
-            box-shadow: 0 0 0 10px rgba(204,169,44, 0);
+            -moz-box-shadow: 0 0 0 10px rgba(181,181,181, 0);
+            box-shadow: 0 0 0 10px rgba(181,181,181, 0);
           }
           100% {
-            -moz-box-shadow: 0 0 0 0 rgba(204,169,44, 0);
-            box-shadow: 0 0 0 0 rgba(204,169,44, 0);
+            -moz-box-shadow: 0 0 0 0 rgba(181,181,181, 0);
+            box-shadow: 0 0 0 0 rgba(181,181,181, 0);
           }
         }"
       )
@@ -50,6 +51,9 @@ fluidPage(
                 label = "Upload a polygon shapefile in a .ZIP",
                 multiple = FALSE,
                 accept = c("application/zip")),
+      checkboxInput(inputId = "repair",
+                    label = "Check shapefile geometry and attempt to repair if necessary",
+                    value = TRUE),
       textInput(inputId = "projname",
                 label = "Name for the project:",
                 value = ""),
@@ -89,7 +93,7 @@ fluidPage(
                                     selected = ""),
                         numericInput(inputId = "seednum",
                                      label = "Seed number for reproducibility:",
-                                     value = 420,
+                                     value = 419,
                                      min = 0),
                         conditionalPanel(condition = "input.allocation != ''",
                                          conditionalPanel(condition = "input.panelnames == '' && input.allocation != ''",
