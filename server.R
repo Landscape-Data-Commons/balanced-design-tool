@@ -148,28 +148,34 @@ shinyServer(function(input, output, session) {
                    
                    # This bit is shamelessly stolen from another one of my packages
                    # It'll dissolve the polygons by strata if they aren't already
-                   unique_ids <- as.character(unique(temp$polygons@data[["STRATUM"]]))
-                   if (length(unique_ids) > nrow(temp$polygons@data)) {
-                     poly_list <- lapply(X = unique_ids,
-                                         polygons = temp$polygons,
-                                         dissolve_field = "STRATUM",
-                                         FUN = function(X, polygons, dissolve_field){
-                                           polygons_current <- polygons[polygons@data[[dissolve_field]] == X, ]
-                                           polygons_current <- methods::as(sf::st_combine(sf::st_as_sf(polygons_current)), "Spatial")
-                                           df <- data.frame(id = X,
-                                                            stringsAsFactors = FALSE)
-                                           names(df) <- dissolve_field
-                                           rownames(df) <- polygons_current@polygons[[1]]@ID
-                                           polygons_current <- sp::SpatialPolygonsDataFrame(Sr = polygons_current,
-                                                                                            data = df)
-                                           return(polygons_current)
-                                         })
-                     temp$polygons <- do.call(rbind,
-                                              poly_list)
-                     
-                     temp$polygons <- area.add(temp$polygons,
-                                               area.sqkm = FALSE)
-                   }
+                   # unique_ids <- as.character(unique(temp$polygons@data[["STRATUM"]]))
+                   # if (length(unique_ids) < nrow(temp$polygons@data)) {
+                   #   showNotification(ui = "The attribute table has at least one stratum with more than one entry and the polygons will be dissolved by stratum. If this causes errors when fetching points, please upload polygons that are already dissolved by stratum.",
+                   #                    duration = NULL,
+                   #                    closeButton = TRUE,
+                   #                    id = "dissolve",
+                   #                    type = "message")
+                   #   
+                   #   poly_list <- lapply(X = unique_ids,
+                   #                       polygons = temp$polygons,
+                   #                       dissolve_field = "STRATUM",
+                   #                       FUN = function(X, polygons, dissolve_field){
+                   #                         polygons_current <- polygons[polygons@data[[dissolve_field]] == X, ]
+                   #                         polygons_current <- methods::as(sf::st_combine(sf::st_as_sf(polygons_current)), "Spatial")
+                   #                         df <- data.frame(id = X,
+                   #                                          stringsAsFactors = FALSE)
+                   #                         names(df) <- dissolve_field
+                   #                         rownames(df) <- polygons_current@polygons[[1]]@ID
+                   #                         polygons_current <- sp::SpatialPolygonsDataFrame(Sr = polygons_current,
+                   #                                                                          data = df)
+                   #                         return(polygons_current)
+                   #                       })
+                   #   temp$polygons <- do.call(rbind,
+                   #                            poly_list)
+                   #   
+                   #   temp$polygons <- area.add(temp$polygons,
+                   #                             area.sqkm = FALSE)
+                   # }
                    
                    
                    # Write this file out to use in spsurvey::grts()
