@@ -519,6 +519,22 @@ shinyServer(function(input, output, session) {
                        sep = "\n",
                        append = TRUE)
                    
+                   message(paste0("There are ", length(temp$polygons[["STRATUM"]]), " stratum entries"))
+                   message(class(temp$polygons))
+                   # message(paste(temp$polygons[["STRATUM"]], collapse = ", "))
+                   missing_from_polys <- temp$polygons[["STRATUM"]][!(temp$polygons[["STRATUM"]] %in% names(temp$design))]
+                   missing_from_do <- names(temp$design)[!(names(temp$design) %in% temp$polygons[["STRATUM"]])]
+                   if (length(missing_from_polys) > 0) {
+                     message("The following strata are missing from the design object: ", paste(missing_from_polys, collapse = ", "))
+                   } else {
+                     message("All strata from the polygons appear in the design object")
+                   }
+                   if (length(missing_from_do) > 0) {
+                     message("The following strata are missing from the polygons", paste(missing_from_do, collapse = ", "))
+                   } else {
+                     message("All strata from the design object appear in the polygons")
+                   }
+                   
                    # Generate the points
                    temp$points <- grts.gen()
                    
