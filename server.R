@@ -44,7 +44,6 @@ shinyServer(function(input, output, session) {
                                     closeButton = TRUE,
                                     id = "polygonserror",
                                     type = "warning")
-                   # fieldnames <- "No valid single shapefile found"
                  } else {
                    fieldnames <- names(temp$polygons@data)
                  }
@@ -140,7 +139,7 @@ shinyServer(function(input, output, session) {
                      # Add the relevant values to STRATUM
                      temp$polygons@data$STRATUM <- as.character(temp$polygons@data[[input$strataname]])
                    }
-
+                   
                    # And also sanitize them WITHOUT PERMISSION
                    temp$polygons@data$STRATUM <- gsub(temp$polygons@data$STRATUM,
                                                       pattern = "\\W",
