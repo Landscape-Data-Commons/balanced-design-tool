@@ -665,6 +665,7 @@ shinyServer(function(input, output, session) {
                                              pattern = "\\W",
                                              replacement = ""),
                           sp_object = temp$polygons,
+                          stratum_field = "STRATUM",
                           seed_number = input$seednum
     )
     
