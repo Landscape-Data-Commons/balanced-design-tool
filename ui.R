@@ -93,7 +93,7 @@ fluidPage(
                                     selected = ""),
                         numericInput(inputId = "seednum",
                                      label = "Seed number for reproducibility:",
-                                     value = 420,
+                                     value = 419,
                                      min = 0),
                         conditionalPanel(condition = "input.allocation != ''",
                                          conditionalPanel(condition = "input.panelnames == '' && input.allocation != ''",
