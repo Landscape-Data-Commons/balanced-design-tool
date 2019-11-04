@@ -312,123 +312,146 @@ shinyServer(function(input, output, session) {
   # When the user clicks the button indicating that they're done with their point allocation, generate a design object
   observeEvent(eventExpr = input$allocated,
                handlerExpr = {
-                 # Display a busy message
-                 showNotification(ui = "Creating design object.",
-                                  duration = NULL,
-                                  closeButton = FALSE,
-                                  id = "busy",
-                                  type = "warning")
-                 
-                 print(input$allocation)
-                 # This gets a vector of the individual panel names from the string that the user entered
-                 temp$panels <- unique(stringr::str_trim(unlist(stringr::str_split(input$panelnames,
-                                                                                   pattern = ","))))
-                 message(temp$panels)
-                 # Sanitize the panel names
-                 temp$panels <- sapply(temp$panels,
-                                       gsub,
-                                       pattern = "\\W",
-                                       replacement = "")
-                 
-                 if (input$allocation == "Manually") {
-                   # Get all the inputs because I can't just slice them out all at once from a reactive list
-                   temp$inputs <- c()
-                   for (id in c(temp$ui.lut$base, temp$ui.lut$over)) {
-                     temp$inputs <- c(temp$inputs, input[[id]])
+                 # OKAY! So sometimes people might accidentally ask for more point according to minbase * stratum count than they allow for in basecount
+                 # This gives them an error if that happens instead of crashing the tool.
+                 if (input$allocation == "Proportionally") {
+                   if ((length(unique(temp$polygons[["STRATUM"]])) * input$minbase) > input$basecount) {
+                     pointcounts_valid <- FALSE
+                     showNotification(ui = paste0("Your target number of base points is ", input$basecount,
+                                                  " but with ", length(unique(temp$polygons[["STRATUM"]])),
+                                                  " strata and a minimum of ", input$minbase,
+                                                  " base points per stratum you'd need ", length(unique(temp$polygons[["STRATUM"]])) * input$minbase,
+                                                  " base points. Increase your total base point count, decrease the minimum point count per stratum, or decrease the number of strata."),
+                                      duration = NULL,
+                                      closeButton = TRUE,
+                                      id = "bad_pointcount",
+                                      type = "error")
+                   } else {
+                     pointcounts_valid <- TRUE
                    }
-                   temp$inputs <- setNames(temp$inputs,
-                                           c(temp$ui.lut$base, temp$ui.lut$over))
-                   # Build the design object
-                   temp$design <- lapply(temp$ui.lut$STRATUM,
-                                         ui.lut = temp$ui.lut,
-                                         panel.names = temp$panels,
-                                         input = temp$inputs,
-                                         function(X, ui.lut, panel.names, input){
-                                           # How many panels?
-                                           panel_count <- length(panel.names)
-                                           # Get those counts
-                                           base_counts <- rep(input[ui.lut$base[ui.lut$STRATUM == X]],
-                                                              times = panel_count)
-                                           # Oversample count
-                                           over_count <- input[ui.lut$over[ui.lut$STRATUM == X]] * panel_count
-                                           
-                                           list(panel = setNames(base_counts,
-                                                                 panel.names),
-                                                seltype = "Equal",
-                                                over = over_count)
-                                         })
-                   
-                   # Set the names of that list
-                   temp$design <- setNames(temp$design,
-                                           temp$ui.lut$STRATUM)
-                   
-                   output$design <- renderText({
-                     paste(temp$design)
-                   })
                  } else {
-                   if (input$allocation == "Proportionally") {
-                     sizes <- dplyr::summarize(dplyr::group_by(temp$polygons@data, STRATUM),
-                                               AREA = sum(AREA.HA))
-                     basecount <- input$basecount
-                     minbase <- input$minbase
-                     minoversample <- input$minoversample
-                     minoversampleproportion <- input$minoversampleproportion
-                   }
-                   if (input$allocation == "Equally") {
-                     sizes <- data.frame(STRATUM = temp$polygons@data$STRATUM,
-                                         AREA = rep(1,
-                                                    times = length(unique(temp$polygons@data$STRATUM))))
-                     basecount <- input$basecount
-                     minbase <- 0
-                     minoversample <- input$minoversample
-                     minoversampleproportion <- input$minoversampleproportion
-                   }
-                   temp$design <- allocate.panels(stratum.sizes = sizes,
-                                                  panel.number = length(temp$panels),
-                                                  panel.names = temp$panels,
-                                                  panel.sample.size = basecount,
-                                                  points.min = minbase,
-                                                  oversample.proportion = minoversampleproportion,
-                                                  oversample.min = minoversample)
-                   output$design <- renderText({
-                     paste(temp$design)
-                   })
-                   print(temp$design)
+                   pointcounts_valid <- TRUE
                  }
-                 # Create a string version of the design object to write out
-                 temp$design.string <- paste(paste0("'",
-                                                    names(temp$design), "' = ",
-                                                    gsub(paste0(as.character(temp$design)),
-                                                         pattern = "\\\"",
-                                                         replacement = "'")),
-                                             collapse = ",")
+                 if (pointcounts_valid) {
+                   # Display a busy message
+                   showNotification(ui = "Creating design object.",
+                                    duration = NULL,
+                                    closeButton = FALSE,
+                                    id = "busy",
+                                    type = "warning")
+                   
+                   print(input$allocation)
+                   # This gets a vector of the individual panel names from the string that the user entered
+                   temp$panels <- unique(stringr::str_trim(unlist(stringr::str_split(input$panelnames,
+                                                                                     pattern = ","))))
+                   message(temp$panels)
+                   # Sanitize the panel names
+                   temp$panels <- sapply(temp$panels,
+                                         gsub,
+                                         pattern = "\\W",
+                                         replacement = "")
+                   
+                   if (input$allocation == "Manually") {
+                     # Get all the inputs because I can't just slice them out all at once from a reactive list
+                     temp$inputs <- c()
+                     for (id in c(temp$ui.lut$base, temp$ui.lut$over)) {
+                       temp$inputs <- c(temp$inputs, input[[id]])
+                     }
+                     temp$inputs <- setNames(temp$inputs,
+                                             c(temp$ui.lut$base, temp$ui.lut$over))
+                     # Build the design object
+                     temp$design <- lapply(temp$ui.lut$STRATUM,
+                                           ui.lut = temp$ui.lut,
+                                           panel.names = temp$panels,
+                                           input = temp$inputs,
+                                           function(X, ui.lut, panel.names, input){
+                                             # How many panels?
+                                             panel_count <- length(panel.names)
+                                             # Get those counts
+                                             base_counts <- rep(input[ui.lut$base[ui.lut$STRATUM == X]],
+                                                                times = panel_count)
+                                             # Oversample count
+                                             over_count <- input[ui.lut$over[ui.lut$STRATUM == X]] * panel_count
+                                             
+                                             list(panel = setNames(base_counts,
+                                                                   panel.names),
+                                                  seltype = "Equal",
+                                                  over = over_count)
+                                           })
+                     
+                     # Set the names of that list
+                     temp$design <- setNames(temp$design,
+                                             temp$ui.lut$STRATUM)
+                     
+                     output$design <- renderText({
+                       paste(temp$design)
+                     })
+                   } else {
+                     if (input$allocation == "Proportionally") {
+                       sizes <- dplyr::summarize(dplyr::group_by(temp$polygons@data, STRATUM),
+                                                 AREA = sum(AREA.HA))
+                       basecount <- input$basecount
+                       minbase <- input$minbase
+                       minoversample <- input$minoversample
+                       minoversampleproportion <- input$minoversampleproportion
+                     }
+                     if (input$allocation == "Equally") {
+                       sizes <- data.frame(STRATUM = temp$polygons@data$STRATUM,
+                                           AREA = rep(1,
+                                                      times = length(unique(temp$polygons@data$STRATUM))))
+                       basecount <- input$basecount
+                       minbase <- 0
+                       minoversample <- input$minoversample
+                       minoversampleproportion <- input$minoversampleproportion
+                     }
+                     temp$design <- allocate.panels(stratum.sizes = sizes,
+                                                    panel.number = length(temp$panels),
+                                                    panel.names = temp$panels,
+                                                    panel.sample.size = basecount,
+                                                    points.min = minbase,
+                                                    oversample.proportion = minoversampleproportion,
+                                                    oversample.min = minoversample)
+                     output$design <- renderText({
+                       paste(temp$design)
+                     })
+                     print(temp$design)
+                   }
+                   # Create a string version of the design object to write out
+                   temp$design.string <- paste(paste0("'",
+                                                      names(temp$design), "' = ",
+                                                      gsub(paste0(as.character(temp$design)),
+                                                           pattern = "\\\"",
+                                                           replacement = "'")),
+                                               collapse = ",")
+                   
+                   # Add the panel names to temp$design.string because they were lost in the process
+                   temp$strata.panels <- unlist(stringr::str_extract_all(string = temp$design.string,
+                                                                         pattern = "panel = c[(](\\d|,| ){1,1000}[)]"))
+                   for (stratum in temp$strata.panels) {
+                     # I'll revisit this to make it prettier. Removing the piping was the priority in the meantime
+                     # Given that this works, I'm disinclined to touch it anymore
+                     # The point is that it makes a version of the design object that can be pasted into the output sample_script.R and Just Work(TM)
+                     temp$design.string <- gsub(temp$design.string,
+                                                pattern = gsub(gsub(stratum,
+                                                                    pattern = "[(]",
+                                                                    replacement = "[(]"),
+                                                               pattern = "[)]",
+                                                               replacement = "[)]"),
+                                                replacement = paste0("panel = c(",
+                                                                     paste(gsub(paste0("'",
+                                                                                       temp$panels,
+                                                                                       "'=",
+                                                                                       stringr::str_extract_all(string = stratum,
+                                                                                                                pattern = "\\d{1,4}")[[1]]),
+                                                                                pattern = "\\\"",
+                                                                                replacement = ""),
+                                                                           collapse = ","),
+                                                                     ")"))
+                   }
+                   # Remove the busy notification
+                   removeNotification(id = "busy")
+                 }
                  
-                 # Add the panel names to temp$design.string because they were lost in the process
-                 temp$strata.panels <- unlist(stringr::str_extract_all(string = temp$design.string,
-                                                                       pattern = "panel = c[(](\\d|,| ){1,1000}[)]"))
-                 for (stratum in temp$strata.panels) {
-                   # I'll revisit this to make it prettier. Removing the piping was the priority in the meantime
-                   # Given that this works, I'm disinclined to touch it anymore
-                   # The point is that it makes a version of the design object that can be pasted into the output sample_script.R and Just Work(TM)
-                   temp$design.string <- gsub(temp$design.string,
-                                              pattern = gsub(gsub(stratum,
-                                                                  pattern = "[(]",
-                                                                  replacement = "[(]"),
-                                                             pattern = "[)]",
-                                                             replacement = "[)]"),
-                                              replacement = paste0("panel = c(",
-                                                                   paste(gsub(paste0("'",
-                                                                                     temp$panels,
-                                                                                     "'=",
-                                                                                     stringr::str_extract_all(string = stratum,
-                                                                                                              pattern = "\\d{1,4}")[[1]]),
-                                                                              pattern = "\\\"",
-                                                                              replacement = ""),
-                                                                         collapse = ","),
-                                                                   ")"))
-                 }
-                 # Remove the busy notification
-                 removeNotification(id = "busy")
                })
   
   # When the user clicks the fetch button, generate points from the design object
