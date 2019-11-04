@@ -158,8 +158,7 @@ grts.custom <- function(design_object,
                                  sp.object = sp_object,
                                  in.shape = in_shape,
                                  stratum = stratum_field,
-                                 shapefile = FALSE
-  )
+                                 shapefile = FALSE)
   
   ## Assign projection info to the sample sites SPDF
   if (!is.null(sp_object)) {
