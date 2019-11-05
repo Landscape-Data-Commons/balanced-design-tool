@@ -207,6 +207,9 @@ shinyServer(function(input, output, session) {
                    #   strata_map
                    # })
                    
+                   # Make a list of strata so the user can see them
+                   
+                   output$strata_table <- renderTable({setNames(data.frame("STRATA" = unique(temp$polygons[["STRATUM"]])), paste0("Current strata (n = ", length(unique(temp$polygons[["STRATUM"]])), ")"))})
                    
                    # Jump to the map, but only if it won't drag the user away from the allocation tab
                    if (!(input$maintabs == "Point Allocation" & input$allocation != "")) {

@@ -118,12 +118,13 @@ fluidPage(
                         )
                         ),
                  column(width = 4,
+                        tableOutput(outputId = "strata_table"),
                         conditionalPanel(condition = "input.allocation != '' && input.panelnames != ''",
                                          helpText("Once you've finished setting the allocation for points, click the button below to store the design scheme"),
                                          actionButton("allocated", "Update point allocation"),
                                          helpText("After updating the design scheme, click the 'Fetch points!' button on the left to draw your points.")
-                        ),
-                        plotOutput(outputId = "strata_map")
+                        )#,
+                        # plotOutput(outputId = "strata_map")
                  )
                  
         ),
