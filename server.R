@@ -15,7 +15,8 @@ shinyServer(function(input, output, session) {
   temp <- reactiveValues(placeholder = "placeholder",
                          # Save what the base working directory is
                          origdir = getwd(),
-                         sessiontempdir = tempdir()
+                         sessiontempdir = tempdir(),
+                         projection = CRS("+proj=aea")
   )
   
   # Allow for wonking big files
@@ -38,6 +39,14 @@ shinyServer(function(input, output, session) {
                                         pattern = "/\\d{1,3}$",
                                         replacement = "")
                  temp$polygons <- shape.extract()
+                 
+                 temp$projection_original <- temp$polygons@proj4string
+                 
+                 if (!identical(temp$projection, temp$projection_original)) {
+                   temp$polygons <- sp::spTransform(x = temp$polygons,
+                                                    CRSobj = temp$projection)
+                 }
+                 
                  if (is.null(temp$polygons) | !(class(temp$polygons) %in% c("SpatialPolygonsDataFrame"))) {
                    showNotification(ui = "No single valid polygon shapefile found. Check the uploaded .zip file to make sure it only contains one polygon shapefile",
                                     duration = NULL,
@@ -474,11 +483,21 @@ shinyServer(function(input, output, session) {
                    
                    # Write out the shapefile of the stratification polygons
                    # This is done when the stratum variable is selected, so this should be redundant??????
-                   rgdal::writeOGR(obj = temp$polygons[, "STRATUM"],
-                                   dsn = temp$sessiontempdir,
-                                   layer = "sample_frame",
-                                   driver = "ESRI Shapefile",
-                                   overwrite_layer = TRUE)
+                   if (!identical(temp$projection, temp$projection_original)) {
+                     rgdal::writeOGR(obj = sp::spTransform(x = temp$polygons[, "STRATUM"],
+                                                           CRSobj = temp$projection_original),
+                                     dsn = temp$sessiontempdir,
+                                     layer = "sample_frame",
+                                     driver = "ESRI Shapefile",
+                                     overwrite_layer = TRUE)
+                   } else {
+                     rgdal::writeOGR(obj = temp$polygons[, "STRATUM"],
+                                     dsn = temp$sessiontempdir,
+                                     layer = "sample_frame",
+                                     driver = "ESRI Shapefile",
+                                     overwrite_layer = TRUE)
+                   }
+
                    
                    
                    # Construct the script to draw a design with the the current design object
@@ -713,11 +732,21 @@ shinyServer(function(input, output, session) {
     
     # I have no idea why this save() call is here
     # save(points, file = "sample_draw")
-    rgdal::writeOGR(obj = points,
-                    dsn = temp$sessiontempdir,
-                    layer = "sample_draw",
-                    driver = "ESRI Shapefile",
-                    overwrite_layer = TRUE)
+    
+    if (!identical(temp$projection, temp$projection_original)) {
+      rgdal::writeOGR(obj = sp::spTransform(x = points,
+                                            CRSobj = temp$projection_original),
+                      dsn = temp$sessiontempdir,
+                      layer = "sample_draw",
+                      driver = "ESRI Shapefile",
+                      overwrite_layer = TRUE)
+    } else {
+      rgdal::writeOGR(obj = points,
+                      dsn = temp$sessiontempdir,
+                      layer = "sample_draw",
+                      driver = "ESRI Shapefile",
+                      overwrite_layer = TRUE)
+    }
     
     if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "sample_draw.shp"))) {
       stop("No shapefile called 'sample_draw' exists in the directory.")
