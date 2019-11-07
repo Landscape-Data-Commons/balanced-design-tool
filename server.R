@@ -587,47 +587,51 @@ shinyServer(function(input, output, session) {
                  }
                  
                  # Make the map!
-                 output$pointmap <- renderLeaflet(expr = {
-                   # Initialize the map
-                   map <- leaflet()
-                   # Add some basic info
-                   map <- addTiles(map = map)
-                   # Make a strata palette to use for the map
-                   strata_palette <- colorFactor(palette = "viridis",
-                                                 levels = sort(unique(temp$polygons@data[["STRATUM"]])))
-                   # Add the stratification polygons
-                   map <- addPolygons(map = map,
-                                      data = sp::spTransform(temp$polygons,
-                                                             CRSobj = temp$points@proj4string),
-                                      color = ~strata_palette(STRATUM),
-                                      stroke = FALSE,
-                                      fillOpacity = 0.7)
-                   # Add in the generated points
-                   map <- addCircleMarkers(map = map,
-                                           data = temp$points,
-                                           stroke = TRUE,
-                                           opacity = 0.9,
-                                           color = "white",
-                                           weight = 1,
-                                           fillColor = "gray20",
-                                           fillOpacity = 1,
-                                           radius = 3)
+                 # But only if the points were sucessfully generated. If there was an error don't try
+                 if ("SpatialPointsDataFrame" %in% class(temp$points)) {
+                   output$pointmap <- renderLeaflet(expr = {
+                     # Initialize the map
+                     map <- leaflet()
+                     # Add some basic info
+                     map <- addTiles(map = map)
+                     # Make a strata palette to use for the map
+                     strata_palette <- colorFactor(palette = "viridis",
+                                                   levels = sort(unique(temp$polygons@data[["STRATUM"]])))
+                     # Add the stratification polygons
+                     map <- addPolygons(map = map,
+                                        data = sp::spTransform(temp$polygons,
+                                                               CRSobj = temp$points@proj4string),
+                                        color = ~strata_palette(STRATUM),
+                                        stroke = FALSE,
+                                        fillOpacity = 0.7)
+                     # Add in the generated points
+                     map <- addCircleMarkers(map = map,
+                                             data = temp$points,
+                                             stroke = TRUE,
+                                             opacity = 0.9,
+                                             color = "white",
+                                             weight = 1,
+                                             fillColor = "gray20",
+                                             fillOpacity = 1,
+                                             radius = 3)
+                     
+                     # Add in a legend for the strata!
+                     map <- addLegend(map = map,
+                                      position = "topright",
+                                      pal = strata_palette,
+                                      values = ~STRATUM,
+                                      data = temp$polygons,
+                                      title = "Strata",
+                                      opacity = 1)
+                     
+                     map
+                   })
                    
-                   # Add in a legend for the strata!
-                   map <- addLegend(map = map,
-                                    position = "topright",
-                                    pal = strata_palette,
-                                    values = ~STRATUM,
-                                    data = temp$polygons,
-                                    title = "Strata",
-                                    opacity = 1)
-                   
-                   map
-                 })
+                   updateTabsetPanel(session,
+                                     inputId = "maintabs",
+                                     selected = "Point Map")
+                 }
                  
-                 updateTabsetPanel(session,
-                                   inputId = "maintabs",
-                                   selected = "Point Map") 
                  
                  # Remove the busy notification
                  removeNotification(id = "busy")
