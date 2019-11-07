@@ -73,7 +73,8 @@ fluidPage(
       helpText(""),
       conditionalPanel(condition = "input.fetch > 0",
                        downloadButton(outputId = 'downloadData',
-                                      label = 'Download Points as shapefile'))
+                                      label = 'Download Points as shapefile')),
+      textOutput(outputId = "grts_error")
     ),
     mainPanel(
       tabsetPanel(

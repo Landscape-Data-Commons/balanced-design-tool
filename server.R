@@ -726,59 +726,68 @@ shinyServer(function(input, output, session) {
   # This invokes grts.custom() and both returns and writes out the results
   grts.gen <- reactive({
     # DRAW SOME POINTS
-    points <- grts.custom(design_object = temp$design,
-                          design_name = gsub(input$projname,
-                                             pattern = "\\W",
-                                             replacement = ""),
-                          sp_object = temp$polygons,
-                          stratum_field = "STRATUM",
-                          seed_number = input$seednum
-    )
+    # BUT ALSO MAKE SURE ERRORS DON'T KILL THE TOOL
+    grts_output <- tryCatch(grts.custom(design_object = temp$design,
+                                        design_name = gsub(input$projname,
+                                                           pattern = "\\W",
+                                                           replacement = ""),
+                                        sp_object = temp$polygons,
+                                        stratum_field = "STRATUM",
+                                        seed_number = input$seednum),
+                            error = function(e){
+                              message("")
+                              return(paste0("ERROR ENCOUNTERED ON DRAW:\n",
+                                     paste(e,
+                                            collapse = "\n")))})
     
-    # I have no idea why this save() call is here
-    # save(points, file = "sample_draw")
-    
-    if (!identical(temp$projection, temp$projection_original)) {
-      rgdal::writeOGR(obj = sp::spTransform(x = points,
-                                            CRSobj = temp$projection_original),
-                      dsn = temp$sessiontempdir,
-                      layer = "sample_draw",
-                      driver = "ESRI Shapefile",
-                      overwrite_layer = TRUE)
+    # So if there was an error, we'll render that to the UI, otherwise proceed as normal
+    if (class(grts_output) == "character") {
+      output$grts_error <- renderText(grts_output)
     } else {
-      rgdal::writeOGR(obj = points,
-                      dsn = temp$sessiontempdir,
-                      layer = "sample_draw",
-                      driver = "ESRI Shapefile",
-                      overwrite_layer = TRUE)
+      points <- grts_output
+      
+      if (!identical(temp$projection, temp$projection_original)) {
+        rgdal::writeOGR(obj = sp::spTransform(x = points,
+                                              CRSobj = temp$projection_original),
+                        dsn = temp$sessiontempdir,
+                        layer = "sample_draw",
+                        driver = "ESRI Shapefile",
+                        overwrite_layer = TRUE)
+      } else {
+        rgdal::writeOGR(obj = points,
+                        dsn = temp$sessiontempdir,
+                        layer = "sample_draw",
+                        driver = "ESRI Shapefile",
+                        overwrite_layer = TRUE)
+      }
+      
+      if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "sample_draw.shp"))) {
+        stop("No shapefile called 'sample_draw' exists in the directory.")
+      }
+      
+      # Create a .zip fle in case user wants the points, which depends on a system call
+      setwd(temp$sessiontempdir)
+      files_to_zip <- list.files(pattern = "^(sample_frame|sample_draw|sample_script)\\.(dbf|prj|shp|shx|r)$",
+                                 ignore.case = TRUE)
+      
+      switch(Sys.info()[["sysname"]],
+             Windows = {
+               system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe a -tzip results.zip ",
+                             paste(files_to_zip,
+                                   collapse = " ")))
+             },
+             Linux = {
+               system(paste("zip results %s",
+                            paste(files_to_zip,
+                                  collapse = " ")))
+             })
+      if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "^results\\.(zip)|(ZIP)"))) {
+        stop("No valid .zip file called 'results' exists in the directory.")
+      }
+      temp$downloadready <- TRUE
+      setwd(temp$origdir)
+      return(points)
     }
-    
-    if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "sample_draw.shp"))) {
-      stop("No shapefile called 'sample_draw' exists in the directory.")
-    }
-    
-    # Create a .zip fle in case user wants the points, which depends on a system call
-    setwd(temp$sessiontempdir)
-    files_to_zip <- list.files(pattern = "^(sample_frame|sample_draw|sample_script)\\.(dbf|prj|shp|shx|r)$",
-                               ignore.case = TRUE)
-    
-    switch(Sys.info()[["sysname"]],
-           Windows = {
-             system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe a -tzip results.zip ",
-                           paste(files_to_zip,
-                                 collapse = " ")))
-           },
-           Linux = {
-             system(paste("zip results %s",
-                          paste(files_to_zip,
-                                collapse = " ")))
-           })
-    if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "^results\\.(zip)|(ZIP)"))) {
-      stop("No valid .zip file called 'results' exists in the directory.")
-    }
-    temp$downloadready <- TRUE
-    setwd(temp$origdir)
-    return(points)
   })
   
   # Download handler for the .zip file created by grts.gen()
