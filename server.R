@@ -184,7 +184,7 @@ shinyServer(function(input, output, session) {
                    #   temp$polygons <- area.add(temp$polygons,
                    #                             area.sqkm = FALSE)
                    # }
-
+                   
                    
                    # Let's make a static map of these!
                    # output$strata_map <- renderPlot(expr = {
@@ -497,7 +497,7 @@ shinyServer(function(input, output, session) {
                                      driver = "ESRI Shapefile",
                                      overwrite_layer = TRUE)
                    }
-
+                   
                    
                    
                    # Construct the script to draw a design with the the current design object
@@ -582,7 +582,6 @@ shinyServer(function(input, output, session) {
                    
                    # Generate the points
                    temp$points <- grts.gen()
-                   
                  }
                  
                  # Make the map!
