@@ -184,7 +184,7 @@ shinyServer(function(input, output, session) {
                    #   temp$polygons <- area.add(temp$polygons,
                    #                             area.sqkm = FALSE)
                    # }
-
+                   
                    
                    # Let's make a static map of these!
                    # output$strata_map <- renderPlot(expr = {
@@ -497,7 +497,7 @@ shinyServer(function(input, output, session) {
                                      driver = "ESRI Shapefile",
                                      overwrite_layer = TRUE)
                    }
-
+                   
                    
                    
                    # Construct the script to draw a design with the the current design object
@@ -551,12 +551,14 @@ shinyServer(function(input, output, session) {
                                       ""
                    )
                    
-                   temp$draw_pt3 <- readLines(paste0(temp$origdir, "/draw_pt3.R"))
+                   temp$draw_pt3 <- readLines(paste0(temp$origdir, "/draw_pt3.R"),
+                                              warn = FALSE)
                    
                    temp$draw_pt4 <- c("",
                                       paste0("design.object <- list(", temp$design.string,")"))
                    
-                   temp$draw_pt5 <- readLines(paste0(temp$origdir, "/draw_pt5.R"))
+                   temp$draw_pt5 <- readLines(paste0(temp$origdir, "/draw_pt5.R"),
+                                              warn = FALSE)
                    
                    # Append the script components to the copy of sample_script.R
                    cat(c(temp$draw_pt2, temp$draw_pt3, temp$draw_pt4, temp$draw_pt5),
@@ -582,51 +584,54 @@ shinyServer(function(input, output, session) {
                    
                    # Generate the points
                    temp$points <- grts.gen()
-                   
                  }
                  
                  # Make the map!
-                 output$pointmap <- renderLeaflet(expr = {
-                   # Initialize the map
-                   map <- leaflet()
-                   # Add some basic info
-                   map <- addTiles(map = map)
-                   # Make a strata palette to use for the map
-                   strata_palette <- colorFactor(palette = "viridis",
-                                                 levels = sort(unique(temp$polygons@data[["STRATUM"]])))
-                   # Add the stratification polygons
-                   map <- addPolygons(map = map,
-                                      data = sp::spTransform(temp$polygons,
-                                                             CRSobj = temp$points@proj4string),
-                                      color = ~strata_palette(STRATUM),
-                                      stroke = FALSE,
-                                      fillOpacity = 0.7)
-                   # Add in the generated points
-                   map <- addCircleMarkers(map = map,
-                                           data = temp$points,
-                                           stroke = TRUE,
-                                           opacity = 0.9,
-                                           color = "white",
-                                           weight = 1,
-                                           fillColor = "gray20",
-                                           fillOpacity = 1,
-                                           radius = 3)
+                 # But only if the points were sucessfully generated. If there was an error don't try
+                 if ("SpatialPointsDataFrame" %in% class(temp$points)) {
+                   output$pointmap <- renderLeaflet(expr = {
+                     # Initialize the map
+                     map <- leaflet()
+                     # Add some basic info
+                     map <- addTiles(map = map)
+                     # Make a strata palette to use for the map
+                     strata_palette <- colorFactor(palette = "viridis",
+                                                   levels = sort(unique(temp$polygons@data[["STRATUM"]])))
+                     # Add the stratification polygons
+                     map <- addPolygons(map = map,
+                                        data = sp::spTransform(temp$polygons,
+                                                               CRSobj = temp$points@proj4string),
+                                        color = ~strata_palette(STRATUM),
+                                        stroke = FALSE,
+                                        fillOpacity = 0.7)
+                     # Add in the generated points
+                     map <- addCircleMarkers(map = map,
+                                             data = temp$points,
+                                             stroke = TRUE,
+                                             opacity = 0.9,
+                                             color = "white",
+                                             weight = 1,
+                                             fillColor = "gray20",
+                                             fillOpacity = 1,
+                                             radius = 3)
+                     
+                     # Add in a legend for the strata!
+                     map <- addLegend(map = map,
+                                      position = "topright",
+                                      pal = strata_palette,
+                                      values = ~STRATUM,
+                                      data = temp$polygons,
+                                      title = "Strata",
+                                      opacity = 1)
+                     
+                     map
+                   })
                    
-                   # Add in a legend for the strata!
-                   map <- addLegend(map = map,
-                                    position = "topright",
-                                    pal = strata_palette,
-                                    values = ~STRATUM,
-                                    data = temp$polygons,
-                                    title = "Strata",
-                                    opacity = 1)
-                   
-                   map
-                 })
+                   updateTabsetPanel(session,
+                                     inputId = "maintabs",
+                                     selected = "Point Map")
+                 }
                  
-                 updateTabsetPanel(session,
-                                   inputId = "maintabs",
-                                   selected = "Point Map") 
                  
                  # Remove the busy notification
                  removeNotification(id = "busy")
@@ -721,59 +726,68 @@ shinyServer(function(input, output, session) {
   # This invokes grts.custom() and both returns and writes out the results
   grts.gen <- reactive({
     # DRAW SOME POINTS
-    points <- grts.custom(design_object = temp$design,
-                          design_name = gsub(input$projname,
-                                             pattern = "\\W",
-                                             replacement = ""),
-                          sp_object = temp$polygons,
-                          stratum_field = "STRATUM",
-                          seed_number = input$seednum
-    )
+    # BUT ALSO MAKE SURE ERRORS DON'T KILL THE TOOL
+    grts_output <- tryCatch(grts.custom(design_object = temp$design,
+                                        design_name = gsub(input$projname,
+                                                           pattern = "\\W",
+                                                           replacement = ""),
+                                        sp_object = temp$polygons,
+                                        stratum_field = "STRATUM",
+                                        seed_number = input$seednum),
+                            error = function(e){
+                              message("")
+                              return(paste0("ERROR ENCOUNTERED ON DRAW:\n",
+                                     paste(e,
+                                            collapse = "\n")))})
     
-    # I have no idea why this save() call is here
-    # save(points, file = "sample_draw")
-    
-    if (!identical(temp$projection, temp$projection_original)) {
-      rgdal::writeOGR(obj = sp::spTransform(x = points,
-                                            CRSobj = temp$projection_original),
-                      dsn = temp$sessiontempdir,
-                      layer = "sample_draw",
-                      driver = "ESRI Shapefile",
-                      overwrite_layer = TRUE)
+    # So if there was an error, we'll render that to the UI, otherwise proceed as normal
+    if (class(grts_output) == "character") {
+      output$grts_error <- renderText(grts_output)
     } else {
-      rgdal::writeOGR(obj = points,
-                      dsn = temp$sessiontempdir,
-                      layer = "sample_draw",
-                      driver = "ESRI Shapefile",
-                      overwrite_layer = TRUE)
+      points <- grts_output
+      
+      if (!identical(temp$projection, temp$projection_original)) {
+        rgdal::writeOGR(obj = sp::spTransform(x = points,
+                                              CRSobj = temp$projection_original),
+                        dsn = temp$sessiontempdir,
+                        layer = "sample_draw",
+                        driver = "ESRI Shapefile",
+                        overwrite_layer = TRUE)
+      } else {
+        rgdal::writeOGR(obj = points,
+                        dsn = temp$sessiontempdir,
+                        layer = "sample_draw",
+                        driver = "ESRI Shapefile",
+                        overwrite_layer = TRUE)
+      }
+      
+      if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "sample_draw.shp"))) {
+        stop("No shapefile called 'sample_draw' exists in the directory.")
+      }
+      
+      # Create a .zip fle in case user wants the points, which depends on a system call
+      setwd(temp$sessiontempdir)
+      files_to_zip <- list.files(pattern = "^(sample_frame|sample_draw|sample_script)\\.(dbf|prj|shp|shx|r)$",
+                                 ignore.case = TRUE)
+      
+      switch(Sys.info()[["sysname"]],
+             Windows = {
+               system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe a -tzip results.zip ",
+                             paste(files_to_zip,
+                                   collapse = " ")))
+             },
+             Linux = {
+               system(paste("zip results %s",
+                            paste(files_to_zip,
+                                  collapse = " ")))
+             })
+      if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "^results\\.(zip)|(ZIP)"))) {
+        stop("No valid .zip file called 'results' exists in the directory.")
+      }
+      temp$downloadready <- TRUE
+      setwd(temp$origdir)
+      return(points)
     }
-    
-    if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "sample_draw.shp"))) {
-      stop("No shapefile called 'sample_draw' exists in the directory.")
-    }
-    
-    # Create a .zip fle in case user wants the points, which depends on a system call
-    setwd(temp$sessiontempdir)
-    files_to_zip <- list.files(pattern = "^(sample_frame|sample_draw|sample_script)\\.(dbf|prj|shp|shx|r)$",
-                               ignore.case = TRUE)
-    
-    switch(Sys.info()[["sysname"]],
-           Windows = {
-             system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe a -tzip results.zip ",
-                           paste(files_to_zip,
-                                 collapse = " ")))
-           },
-           Linux = {
-             system(paste("zip results %s",
-                          paste(files_to_zip,
-                                collapse = " ")))
-           })
-    if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "^results\\.(zip)|(ZIP)"))) {
-      stop("No valid .zip file called 'results' exists in the directory.")
-    }
-    temp$downloadready <- TRUE
-    setwd(temp$origdir)
-    return(points)
   })
   
   # Download handler for the .zip file created by grts.gen()

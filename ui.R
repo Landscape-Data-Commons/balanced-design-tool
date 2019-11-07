@@ -54,12 +54,13 @@ fluidPage(
       checkboxInput(inputId = "repair",
                     label = "Check shapefile geometry and attempt to repair if necessary",
                     value = TRUE),
-      textInput(inputId = "projname",
-                label = "Name for the project:",
-                value = ""),
-      selectInput(inputId = "strataname",
-                  label = "Select a stratum field:",
-                  choices = c("")),
+      conditionalPanel(condition = "input.projname != ''",
+                       textInput(inputId = "projname",
+                                 label = "Name for the project:",
+                                 value = ""),
+                       selectInput(inputId = "strataname",
+                                   label = "Select a stratum field:",
+                                   choices = c(""))),
       conditionalPanel(condition = "input.strataname != ''",
                        actionButton(inputId = "submitstratum",
                                     label = "Update stratum information")),
@@ -72,7 +73,8 @@ fluidPage(
       helpText(""),
       conditionalPanel(condition = "input.fetch > 0",
                        downloadButton(outputId = 'downloadData',
-                                      label = 'Download Points as shapefile'))
+                                      label = 'Download Points as shapefile')),
+      textOutput(outputId = "grts_error")
     ),
     mainPanel(
       tabsetPanel(
@@ -123,8 +125,7 @@ fluidPage(
                                          helpText("Once you've finished setting the allocation for points, click the button below to store the design scheme"),
                                          actionButton("allocated", "Update point allocation"),
                                          helpText("After updating the design scheme, click the 'Fetch points!' button on the left to draw your points.")
-                        )#,
-                        # plotOutput(outputId = "strata_map")
+                        )
                  )
                  
         ),
