@@ -759,13 +759,18 @@ shinyServer(function(input, output, session) {
                                         seed_number = input$seednum),
                             error = function(e){
                               message("")
-                              return(paste0("ERROR ENCOUNTERED ON DRAW:\n",
+                              return(paste0("ERROR ENCOUNTERED ON DRAW: ",
                                      paste(e,
                                             collapse = "\n")))})
     
     # So if there was an error, we'll render that to the UI, otherwise proceed as normal
     if (class(grts_output) == "character") {
-      output$grts_error <- renderText(grts_output)
+      showNotification(ui = grts_output,
+                       duration = NULL,
+                       closeButton = TRUE,
+                       id = "grts_error",
+                       type = "error")
+      # output$grts_error <- renderText(grts_output)
     } else {
       points <- grts_output
       
