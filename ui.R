@@ -8,7 +8,7 @@ fluidPage(
       HTML(
         ".shiny-notification {
           position:fixed;
-          bottom: calc(60%);
+          top: calc(30%);
           left: calc(5%);
           width: calc(25%);
           opacity: 1;

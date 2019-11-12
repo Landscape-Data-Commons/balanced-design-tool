@@ -49,92 +49,100 @@ shinyServer(function(input, output, session) {
                                         replacement = "")
                  temp$polygons <- shape.extract()
                  
-                 temp$projection_original <- temp$polygons@proj4string
-                 
-                 if (!identical(temp$projection, temp$projection_original)) {
-                   temp$polygons <- sp::spTransform(x = temp$polygons,
-                                                    CRSobj = temp$projection)
-                 }
-                 
-                 if (is.null(temp$polygons) | !(class(temp$polygons) %in% c("SpatialPolygonsDataFrame"))) {
-                   showNotification(ui = "No single valid polygon shapefile found. Check the uploaded .zip file to make sure it only contains one polygon shapefile",
-                                    duration = NULL,
-                                    closeButton = TRUE,
-                                    id = "polygonserror",
-                                    type = "warning")
-                 } else {
-                   fieldnames <- names(temp$polygons@data)
-                 }
-                 
-                 if (input$repair) {
-                   polygons_sf <- sf::st_as_sf(temp$polygons)
-                   
-                   
-                   validity_check <- sf::st_is_valid(polygons_sf)
-                   
-                   if (any(is.na(validity_check))) {
-                     showNotification(ui = "The geometry of the polygons is corrupt. Unable to repair. Please correct shapefile geometry and reupload.",
+                 if (!is.null(temp$polygons)) {
+                   if (!class(temp$polygons) %in% c("SpatialPolygonsDataFrame")) {
+                     showNotification(ui = "No single valid polygon shapefile found. Check the uploaded .zip file to make sure it only contains one polygon shapefile",
                                       duration = NULL,
                                       closeButton = TRUE,
-                                      id = "corruption",
+                                      id = "polygonserror",
                                       type = "error")
-                   } else if (!all(validity_check)) {
-                     showNotification(ui = "Invalid geometry found. Attempting to repair. If this takes more than five minutes, you may want to attempt to repair the geometry yourself by buffering with a distance of 0 and reupload.",
-                                      duration = NULL,
-                                      closeButton = FALSE,
-                                      id = "invalid",
-                                      type = "warning")
-                     polygons_repaired <- sf::st_buffer(x = polygons_sf,
-                                                        dist = 0)
-                     validity_check <- sf::st_is_valid(polygons_repaired)
+                   } else {
+                     fieldnames <- names(temp$polygons@data)
                      
-                     removeNotification(id = "invalid")
-                     if (any(is.na(validity_check))) {
-                       showNotification(ui = "The repair attempt failed and some geometry of the polygons is now corrupt. Please correct shapefile geometry and reupload.",
-                                        duration = NULL,
-                                        closeButton = TRUE,
-                                        id = "repair_corrupt",
-                                        type = "error")
-                     } else if (!all(na.omit(validity_check))) {
-                       showNotification(ui = "The repair attempt failed and some geometry of the polygons is still invalid. Please correct shapefile geometry and reupload.",
-                                        duration = NULL,
-                                        closeButton = TRUE,
-                                        id = "repair_invalid",
-                                        type = "error")
-                     } else {
-                       showNotification(ui = "The geometry of the polygons was successfully repaired.",
-                                        duration = NULL,
-                                        closeButton = TRUE,
-                                        id = "repair_success",
-                                        type = "message")
+                     temp$projection_original <- temp$polygons@proj4string
+                     
+                     if (!identical(temp$projection, temp$projection_original)) {
+                       temp$polygons <- sp::spTransform(x = temp$polygons,
+                                                        CRSobj = temp$projection)
                      }
                      
-                     temp$polygons <- methods::as(polygons_repaired, "Spatial")
-                   } else {
-                     showNotification(ui = "The geometry of the polygons is valid and does not require repair.",
-                                      duration = NULL,
-                                      closeButton = TRUE,
-                                      id = "valid",
-                                      type = "message")
+                     
+                     
+                     if (input$repair) {
+                       polygons_sf <- sf::st_as_sf(temp$polygons)
+                       
+                       
+                       validity_check <- sf::st_is_valid(polygons_sf)
+                       
+                       if (any(is.na(validity_check))) {
+                         showNotification(ui = "The geometry of the polygons is corrupt. Unable to repair. Please correct shapefile geometry and reupload.",
+                                          duration = NULL,
+                                          closeButton = TRUE,
+                                          id = "corruption",
+                                          type = "error")
+                       } else if (!all(validity_check)) {
+                         showNotification(ui = "Invalid geometry found. Attempting to repair. If this takes more than five minutes, you may want to attempt to repair the geometry yourself by buffering with a distance of 0 and reupload.",
+                                          duration = NULL,
+                                          closeButton = FALSE,
+                                          id = "invalid",
+                                          type = "warning")
+                         polygons_repaired <- sf::st_buffer(x = polygons_sf,
+                                                            dist = 0)
+                         validity_check <- sf::st_is_valid(polygons_repaired)
+                         
+                         removeNotification(id = "invalid")
+                         if (any(is.na(validity_check))) {
+                           showNotification(ui = "The repair attempt failed and some geometry of the polygons is now corrupt. Please correct shapefile geometry and reupload.",
+                                            duration = NULL,
+                                            closeButton = TRUE,
+                                            id = "repair_corrupt",
+                                            type = "error")
+                         } else if (!all(na.omit(validity_check))) {
+                           showNotification(ui = "The repair attempt failed and some geometry of the polygons is still invalid. Please correct shapefile geometry and reupload.",
+                                            duration = NULL,
+                                            closeButton = TRUE,
+                                            id = "repair_invalid",
+                                            type = "error")
+                         } else {
+                           showNotification(ui = "The geometry of the polygons was successfully repaired.",
+                                            duration = NULL,
+                                            closeButton = TRUE,
+                                            id = "repair_success",
+                                            type = "message")
+                         }
+                         
+                         temp$polygons <- methods::as(polygons_repaired, "Spatial")
+                       } else {
+                         showNotification(ui = "The geometry of the polygons is valid and does not require repair.",
+                                          duration = NULL,
+                                          closeButton = TRUE,
+                                          id = "valid",
+                                          type = "message")
+                       }
+                     }
+                     
+                     updateSelectInput(session,
+                                       inputId = "strataname",
+                                       choices = unique(c("", "Do not stratify", fieldnames)),
+                                       selected = "")
+                     updateSelectInput(session,
+                                       inputId = "allocation",
+                                       choices = c("", "Proportionally", "Manually", "Equally"),
+                                       selected = input$allocation)
+                     updateTextInput(session,
+                                     inputId = "projname",
+                                     value = gsub(gsub(input$uploadzip$name,
+                                                       pattern = "\\.(zip)|(ZIP)$",
+                                                       replacement = ""),
+                                                  pattern = "\\W",
+                                                  replacement = ""))
+                     
                    }
                  }
                  
                  
-                 updateSelectInput(session,
-                                   inputId = "strataname",
-                                   choices = unique(c("", "Do not stratify", fieldnames)),
-                                   selected = "")
-                 updateSelectInput(session,
-                                   inputId = "allocation",
-                                   choices = c("", "Proportionally", "Manually", "Equally"),
-                                   selected = input$allocation)
-                 updateTextInput(session,
-                                 inputId = "projname",
-                                 value = gsub(gsub(input$uploadzip$name,
-                                                   pattern = "\\.(zip)|(ZIP)$",
-                                                   replacement = ""),
-                                              pattern = "\\W",
-                                              replacement = ""))
+                 
+                 
                  
                  # Remove the busdy notification
                  removeNotification(id = "busy")
@@ -717,6 +725,11 @@ shinyServer(function(input, output, session) {
     
     # If there wasn't a shapefile or there was more than one, return NULL
     if (length(temp$shapename) != 1) {
+      showNotification(ui = "Unable to extract shapefile. Please make sure that the uploaded .ZIP contains only one shapefile and that it includes all the necessary components of a shapefile (.DBF, .PRJ, .SHP, and .SHX)",
+                       duration = NULL,
+                       closeButton = TRUE,
+                       id = "shapefile_error",
+                       type = "error")
       return(NULL)
     }
     # Does
