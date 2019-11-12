@@ -11,6 +11,12 @@ source('support.functions.R')
 
 # Define server logic
 shinyServer(function(input, output, session) {
+  # This is specifically so that we can actually reference this output ID to control the download button conditionalPanel() without rendering it anywhere
+  output$downloadready <- renderText("no")
+  outputOptions(output,
+                "downloadready",
+                suspendWhenHidden = FALSE)
+  
   # Initialize temp to work within
   temp <- reactiveValues(placeholder = "placeholder",
                          # Save what the base working directory is
@@ -27,6 +33,9 @@ shinyServer(function(input, output, session) {
   # When a valid shapefile-containing .zip gets uploaded, update the inputs that are available
   observeEvent(eventExpr = input$uploadzip,
                handlerExpr = {
+                 # NO DOWNLOADING RESULTS!!!! An upload invalidates any existing output
+                 output$downloadready <- renderText("no")
+                 
                  # Display a busy message
                  showNotification(ui = "Please wait while the shapefile is extracted and loaded. This can take a bit with large and complex polygons.",
                                   duration = NULL,
@@ -134,6 +143,9 @@ shinyServer(function(input, output, session) {
   # When the user clicks the button after selecting a stratum field
   observeEvent(eventExpr = input$submitstratum,
                handlerExpr = {
+                 # NO DOWNLOADING RESULTS!!!! A change in strata invalidates existing output
+                 output$downloadready <- renderText("no")
+                 
                  # Display a busy message
                  showNotification(ui = "Updating stratification information.",
                                   duration = NULL,
@@ -271,6 +283,9 @@ shinyServer(function(input, output, session) {
   # When the user selects a new allocation scheme, as long as it's not blank, jump to the relevant tab
   observeEvent(eventExpr = input$allocation,
                handlerExpr = {
+                 # NO DOWNLOADING RESULTS!!!! A change in allocation invalidates any existing output
+                 output$downloadready <- renderText("no")
+                 
                  if (input$allocation != "") {
                    updateTabsetPanel(session,
                                      inputId = "maintabs",
@@ -324,6 +339,9 @@ shinyServer(function(input, output, session) {
   # When the user clicks the button indicating that they're done with their point allocation, generate a design object
   observeEvent(eventExpr = input$allocated,
                handlerExpr = {
+                 # NO DOWNLOADING RESULTS!!!! A change in allocation invalidates any existing output
+                 output$downloadready <- renderText("no")
+
                  # OKAY! So sometimes people might accidentally ask for more point according to minbase * stratum count than they allow for in basecount
                  # This gives them an error if that happens instead of crashing the tool.
                  if (input$allocation == "Proportionally") {
@@ -469,6 +487,9 @@ shinyServer(function(input, output, session) {
   # When the user clicks the fetch button, generate points from the design object
   observeEvent(eventExpr = input$fetch,
                handlerExpr = {
+                 # NO DOWNLOADING RESULTS!!!! Drawing new points invalidates any existing output
+                 output$downloadready <- renderText("no")
+                 
                  # Display a busy message
                  showNotification(ui = "Please wait while the sample points are drawn. This can take a bit with large and complex designs.",
                                   duration = NULL,
@@ -720,7 +741,9 @@ shinyServer(function(input, output, session) {
   # Update the points table
   observeEvent(eventExpr = temp$points,
                handlerExpr = {
-                 output$pointdata <- renderTable(temp$points@data)
+                 if (class(temp$points) %in% c("SpatialPointsDataFrame")) {
+                   output$pointdata <- renderTable(temp$points@data)
+                 }
                })
   
   # This invokes grts.custom() and both returns and writes out the results
@@ -736,13 +759,18 @@ shinyServer(function(input, output, session) {
                                         seed_number = input$seednum),
                             error = function(e){
                               message("")
-                              return(paste0("ERROR ENCOUNTERED ON DRAW:\n",
+                              return(paste0("ERROR ENCOUNTERED ON DRAW: ",
                                      paste(e,
                                             collapse = "\n")))})
     
     # So if there was an error, we'll render that to the UI, otherwise proceed as normal
     if (class(grts_output) == "character") {
-      output$grts_error <- renderText(grts_output)
+      showNotification(ui = grts_output,
+                       duration = NULL,
+                       closeButton = TRUE,
+                       id = "grts_error",
+                       type = "error")
+      # output$grts_error <- renderText(grts_output)
     } else {
       points <- grts_output
       
@@ -784,7 +812,7 @@ shinyServer(function(input, output, session) {
       if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "^results\\.(zip)|(ZIP)"))) {
         stop("No valid .zip file called 'results' exists in the directory.")
       }
-      temp$downloadready <- TRUE
+      output$downloadready <- renderText("yes")
       setwd(temp$origdir)
       return(points)
     }
