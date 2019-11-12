@@ -71,7 +71,7 @@ fluidPage(
                                     label = "Fetch points!")),
       # The empty string is just to take up space and buffer the buttons
       helpText(""),
-      conditionalPanel(condition = "input.fetch > 0",
+      conditionalPanel(condition = "output.downloadready == 'yes'",
                        downloadButton(outputId = 'downloadData',
                                       label = 'Download Points as shapefile')),
       textOutput(outputId = "grts_error")
