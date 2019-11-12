@@ -741,7 +741,9 @@ shinyServer(function(input, output, session) {
   # Update the points table
   observeEvent(eventExpr = temp$points,
                handlerExpr = {
-                 output$pointdata <- renderTable(temp$points@data)
+                 if (class(temp$points) %in% c("SpatialPointsDataFrame")) {
+                   output$pointdata <- renderTable(temp$points@data)
+                 }
                })
   
   # This invokes grts.custom() and both returns and writes out the results
