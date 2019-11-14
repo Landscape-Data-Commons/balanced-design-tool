@@ -44,7 +44,7 @@ fluidPage(
       )
     )
   ),
-  titlePanel("Spatially Balanced Sampling Tool"),
+  titlePanel("Balanced Design Tool"),
   sidebarLayout(
     sidebarPanel(
       fileInput(inputId = "uploadzip",
