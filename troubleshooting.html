@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+<title>troubleshooting.utf8</title>
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+
+
+
+<p>Polygon shapefiles are complex things and unfortunately this tool can’t identify and repair all of the possible sources of problems that will cause it to fail.</p>
+<p>Almost all crashes due to shapefile geometry (that the tool’s repair option does not correct) can be solved one of two ways:</p>
+<p><strong>1) Dissolving</strong>: Dissolving the polygons by the stratification field is easy and works in almost every case. If there are other attributes of the polygons that you want to preserve but will be lost in the dissolve (<em>e.g.</em> multiple ploygons belong to the same stratum but it is important to capture that they belong to different administrative units), be sure to retain those polygons with the full information and create a new, separate shapefile from the dissolve process.</p>
+<p><strong>2) Buffering</strong>: Buffering the polygons by a distance of 0 units can also solve crashes. This will cause no user-noticeable changes to the polygons or their attributes, but does generally force tiny changes to the underlying geometry that correct common issues like slivers or discontinuities. Note that not all geoprocessing software will allow for buffering with a distance of 0.</p>
+<p>If you are encountering repeated crashing with a shapefile, even with the option to check and repair geometry selected, chances are that there are some irregularities or errors in the geometry that crept in during the geoprocessing that created the polygons. These are almost always due to quirks of the geoprocessing software rather than mistakes on a user’s part. Many geometry errors may not be readily apparent, especially if you use Arc software like ArcGIS which does an excellent job of glossing over and working around most geometry errors, making them invisible to users. Another cause can be memory allocation issues for particularly complicated polygons. This seems to happen most often when there are dozens to thousands of entries per stratum in the polygon attributes instead of a single entry for each. However, some sets of polygons may be complex enough that this tool will be unable to handle them.</p>
+
+
+
+<!-- code folding -->
+
+
+
+</body>
+</html>

@@ -148,6 +148,22 @@ shinyServer(function(input, output, session) {
                  removeNotification(id = "busy")
                })
   
+  # If the user clicks the troubleshooting link
+  observeEvent(eventExpr = input$troubleshoot,
+               handlerExpr = {
+                 updateTabsetPanel(session,
+                                   inputId = "maintabs",
+                                   selected = "Troubleshooting") 
+               })
+  
+  # If the user clicks the glossary link
+  observeEvent(eventExpr = input$glossary,
+               handlerExpr = {
+                 updateTabsetPanel(session,
+                                   inputId = "maintabs",
+                                   selected = "Glossary") 
+               })
+  
   # When the user clicks the button after selecting a stratum field
   observeEvent(eventExpr = input$submitstratum,
                handlerExpr = {
