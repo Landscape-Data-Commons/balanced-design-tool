@@ -11,13 +11,13 @@ output:
 
 **Panel**: A set of sample points that have the same revisit pattern across years. For example, a design might be divided into 5 panels, each representing a different year. All points within a single panel visited in 2017, would then be visited in 2022, 2027, and so on. The points visited 2017 through 2022 together make up the entire sample design. It is also acceptable to use only one panel for a multiple year design and use the year of first sampling to establish the revisit pattern, *e.g.* if a point was sampled in the second of five years, it now belongs to panel 2 and will be revisited every five years counting from that year.
 
-**Population**: The entire “universe” to which the results of sampling apply. The population is defined by many factors; the area you’re interested in, objectives and constraints. The population includes *all* and *only* locations that may possibly be sampled; any areas that would not be sampled are not part of the population.
+**Population**: The entire “universe” to which the results of sampling apply. The population is defined by many factors; the area you’re interested in, objectives, and other constraints. The population includes *all* and *only* locations that may possibly be sampled; any areas that would not be sampled are not part of the population.
 
 **Sample Design**: Provides information on the intended and actual sample sizes, strata definitions, and the sample selection methodology. This term is often used interchangeable with “sample plan”, “survey design”, “sampling plan” or “sampling design”.
 
 **Sample Frame**: A representation of the target population. The sample frame is the geographic extent of the population and therefore covers *all* and *only* the areas which may possibly be sampled.
 
-**Sample Point/Reach/Plot**: Location where data have been or are intended to be collected. For terrestrial sampling, this is most often called a plot. For aquatic sampling, this is typically a stream reach. In some documents, the phrase sample point is used to refer to both.
+**Sample Point/Reach/Plot**: Location where data have been or are intended to be collected. For terrestrial sampling, this is most often called a plot. For aquatic sampling, this is typically a stream reach. In some documents, the phrase "sample point" is used to refer to both.
 
 **Sample Size**: The number of points or plots in the that need to be sampled within a stratum to analyze data to ensure a desired level of precision and accuracy. The sample size can influence the types of analyses you can perform and the uncertainty of the results. The sample size across the study area is a function of several factors:
 
@@ -28,6 +28,8 @@ output:
 **Sampling**: Using selected members to estimate attributes of a larger population. This takes the form of visiting a location and collecting data/observations for that location.
 
 **Sampled Population**: The portion of the target population that is actually sampled. Due to real-world constraints on implementation of a sample design, this usually does not perfectly match the target population.
+
+**Seed Number**: A number used as the basis for random numbers by a piece of software. A random outcome will be the same every single time as long as the same seed number is used. This allows for random sample designs that are also reproducible.
 
 **Spatially Balanced Sampling**: An approach in which sampling is evenly spaced across study area. This is dependent on the implementation of the sample design following correct sampling order to maximize spatial dispersion of any sequence of sample points.
 
