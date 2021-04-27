@@ -7,6 +7,7 @@ library(shiny)
 library(rgdal)
 library(spsurvey)
 library(sf)
+library(sp)
 source('support.functions.R')
 
 # Define server logic
