@@ -61,6 +61,7 @@ shinyServer(function(input, output, session) {
                      
                      temp$projection_original <- temp$polygons@proj4string
                      
+
                      if (!identical(temp$projection, temp$projection_original)) {
                        temp$polygons <- sp::spTransform(x = temp$polygons,
                                                         CRSobj = temp$projection)
@@ -365,7 +366,7 @@ shinyServer(function(input, output, session) {
                handlerExpr = {
                  # NO DOWNLOADING RESULTS!!!! A change in allocation invalidates any existing output
                  output$downloadready <- renderText("no")
-
+                 
                  # OKAY! So sometimes people might accidentally ask for more point according to minbase * stratum count than they allow for in basecount
                  # This gives them an error if that happens instead of crashing the tool.
                  if (input$allocation == "Proportionally") {
@@ -756,8 +757,11 @@ shinyServer(function(input, output, session) {
     # Read in the FIRST shapefile and add areas. Too bad if they included more than one!
     polygons <- rgdal::readOGR(dsn = dirname(shapes$datapath),
                                layer = temp$shapename[1])
+
     polygons <- area.add(polygons,
                          area.sqkm = FALSE)
+    
+    
     
     return(polygons)
   })
@@ -789,8 +793,8 @@ shinyServer(function(input, output, session) {
                             error = function(e){
                               message("")
                               return(paste0("ERROR ENCOUNTERED ON DRAW: ",
-                                     paste(e,
-                                            collapse = "\n")))})
+                                            paste(e,
+                                                  collapse = "\n")))})
     
     # So if there was an error, we'll render that to the UI, otherwise proceed as normal
     if (class(grts_output) == "character") {
@@ -862,6 +866,3 @@ shinyServer(function(input, output, session) {
       file.copy(paste0(temp$sessiontempdir, "/results.zip"), file)
     })
 })
-
-
-
