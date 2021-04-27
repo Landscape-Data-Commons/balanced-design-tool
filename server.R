@@ -48,8 +48,9 @@ shinyServer(function(input, output, session) {
                  temp$directory <- gsub(input$uploadzip$datapath,
                                         pattern = "/\\d{1,3}$",
                                         replacement = "")
+
                  temp$polygons <- shape.extract()
-                 
+
                  if (!is.null(temp$polygons)) {
                    if (!class(temp$polygons) %in% c("SpatialPolygonsDataFrame")) {
                      showNotification(ui = "No single valid polygon shapefile found. Check the uploaded .zip file to make sure it only contains one polygon shapefile",
