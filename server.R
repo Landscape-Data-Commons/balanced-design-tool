@@ -22,7 +22,7 @@ shinyServer(function(input, output, session) {
                          # Save what the base working directory is
                          origdir = getwd(),
                          sessiontempdir = tempdir(),
-                         projection = CRS("+proj=aea")
+                         projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
   )
   
   # Allow for wonking big files
