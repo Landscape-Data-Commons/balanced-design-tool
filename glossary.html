@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+<title>glossary.utf8</title>
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+
+
+
+<p><strong>Base Points</strong>: Locations which are intended and expected to be sampled, although the actual implementation of the design may result in some base points being rejected or unsampleable (see: oversample points). The total number of base points represents the sample size for the design and each base point is associated with a panel.</p>
+<p><strong>Oversample Points</strong>: Extra sample points which are selected at the time of the sample draw. These points are used to supplement the base points when a base point is rejected or not sampled. A design should have enough oversample points to replace all rejected/unsampleable base points in order to reach the intended sample size. Oversample points should only be sampled once all base points in a design have been sampled or rejected.</p>
+<p><strong>Panel</strong>: A set of sample points that have the same revisit pattern across years. For example, a design might be divided into 5 panels, each representing a different year. All points within a single panel visited in 2017, would then be visited in 2022, 2027, and so on. The points visited 2017 through 2022 together make up the entire sample design. It is also acceptable to use only one panel for a multiple year design and use the year of first sampling to establish the revisit pattern, <em>e.g.</em> if a point was sampled in the second of five years, it now belongs to panel 2 and will be revisited every five years counting from that year.</p>
+<p><strong>Population</strong>: The entire “universe” to which the results of sampling apply. The population is defined by many factors; the area you’re interested in, objectives and constraints. The population includes <em>all</em> and <em>only</em> locations that may possibly be sampled; any areas that would not be sampled are not part of the population.</p>
+<p><strong>Sample Design</strong>: Provides information on the intended and actual sample sizes, strata definitions, and the sample selection methodology. This term is often used interchangeable with “sample plan”, “survey design”, “sampling plan” or “sampling design”.</p>
+<p><strong>Sample Frame</strong>: A representation of the target population. The sample frame is the geographic extent of the population and therefore covers <em>all</em> and <em>only</em> the areas which may possibly be sampled.</p>
+<p><strong>Sample Point/Reach/Plot</strong>: Location where data have been or are intended to be collected. For terrestrial sampling, this is most often called a plot. For aquatic sampling, this is typically a stream reach. In some documents, the phrase sample point is used to refer to both.</p>
+<p><strong>Sample Size</strong>: The number of points or plots in the that need to be sampled within a stratum to analyze data to ensure a desired level of precision and accuracy. The sample size can influence the types of analyses you can perform and the uncertainty of the results. The sample size across the study area is a function of several factors:</p>
+<ol style="list-style-type: decimal">
+<li>Existing or legacy monitoring information, <em>e.g.</em> Having existing and usable data may mean that less new data needs to be collected.</li>
+<li>Statistical considerations, <em>e.g.</em> What analyses will be needed? What are the desired confidence level and confidence interval?</li>
+<li>Funding and personnel limitations, <em>e.g.</em> How many points per year can actually be sampled by data collectors?</li>
+</ol>
+<p><strong>Sampling</strong>: Using selected members to estimate attributes of a larger population. This takes the form of visiting a location and collecting data/observations for that location.</p>
+<p><strong>Sampled Population</strong>: The portion of the target population that is actually sampled. Due to real-world constraints on implementation of a sample design, this usually does not perfectly match the target population.</p>
+<p><strong>Seed Number</strong>: A number used as the basis for random numbers by a piece of software. A random outcome will be the same every single time as long as the same seed number is used. This allows for random sample designs that are also reproducible.</p>
+<p><strong>Spatially Balanced Sampling</strong>: An approach in which sampling is evenly spaced across study area. This is dependent on the implementation of the sample design following correct sampling order to maximize spatial dispersion of any sequence of sample points.</p>
+<p><em>NOTE</em>: The spatial balance of a sample design is only preserved if the points are sampled in ascending numerical order within strata and maintaining sampling proportions between sample, <em>e.g.</em> if stratum 1 has 20 points and stratum 2 has 40 points, by the time half of stratum 1 points are sampled (the first 10 points of stratum 1), half of stratum 2 should also be sampled (the first 20 points of stratum 2).</p>
+<p><strong>Stratification</strong>: Stratification refers to dividing a population or study area into subgroups or subunits called strata for the purposes of sampling or data analysis. Reasons to stratify include:</p>
+<ol style="list-style-type: decimal">
+<li>Variability and range of indicators is dependent on spatial factors, <em>e.g.</em> different ecosystem types (often represented with Ecological Sites, LANDFIRE Biophysical Settings, or Strahler stream order) will have different potentials and may be grouped into strata.</li>
+<li>Ensure different types of land (especially types with small spatial extents) are sampled, <em>e.g.</em> if Sage-Grouse habitat is important to the intended use of a design but makes up a very small portion, it may be its own stratum in order to guarantee that some points are drawn for it.</li>
+</ol>
+
+
+
+<!-- code folding -->
+
+
+
+</body>
+</html>
