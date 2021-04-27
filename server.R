@@ -7,6 +7,7 @@ library(shiny)
 library(rgdal)
 library(spsurvey)
 library(sf)
+library(sp)
 source('support.functions.R')
 
 # Define server logic
@@ -22,7 +23,7 @@ shinyServer(function(input, output, session) {
                          # Save what the base working directory is
                          origdir = getwd(),
                          sessiontempdir = tempdir(),
-                         projection = CRS("+proj=aea")
+                         projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
   )
   
   # Allow for wonking big files
@@ -47,8 +48,9 @@ shinyServer(function(input, output, session) {
                  temp$directory <- gsub(input$uploadzip$datapath,
                                         pattern = "/\\d{1,3}$",
                                         replacement = "")
+
                  temp$polygons <- shape.extract()
-                 
+
                  if (!is.null(temp$polygons)) {
                    if (!class(temp$polygons) %in% c("SpatialPolygonsDataFrame")) {
                      showNotification(ui = "No single valid polygon shapefile found. Check the uploaded .zip file to make sure it only contains one polygon shapefile",
@@ -61,6 +63,7 @@ shinyServer(function(input, output, session) {
                      
                      temp$projection_original <- temp$polygons@proj4string
                      
+
                      if (!identical(temp$projection, temp$projection_original)) {
                        temp$polygons <- sp::spTransform(x = temp$polygons,
                                                         CRSobj = temp$projection)
@@ -365,7 +368,7 @@ shinyServer(function(input, output, session) {
                handlerExpr = {
                  # NO DOWNLOADING RESULTS!!!! A change in allocation invalidates any existing output
                  output$downloadready <- renderText("no")
-
+                 
                  # OKAY! So sometimes people might accidentally ask for more point according to minbase * stratum count than they allow for in basecount
                  # This gives them an error if that happens instead of crashing the tool.
                  if (input$allocation == "Proportionally") {
@@ -756,8 +759,11 @@ shinyServer(function(input, output, session) {
     # Read in the FIRST shapefile and add areas. Too bad if they included more than one!
     polygons <- rgdal::readOGR(dsn = dirname(shapes$datapath),
                                layer = temp$shapename[1])
+
     polygons <- area.add(polygons,
                          area.sqkm = FALSE)
+    
+    
     
     return(polygons)
   })
@@ -789,8 +795,8 @@ shinyServer(function(input, output, session) {
                             error = function(e){
                               message("")
                               return(paste0("ERROR ENCOUNTERED ON DRAW: ",
-                                     paste(e,
-                                            collapse = "\n")))})
+                                            paste(e,
+                                                  collapse = "\n")))})
     
     # So if there was an error, we'll render that to the UI, otherwise proceed as normal
     if (class(grts_output) == "character") {
@@ -862,6 +868,3 @@ shinyServer(function(input, output, session) {
       file.copy(paste0(temp$sessiontempdir, "/results.zip"), file)
     })
 })
-
-
-

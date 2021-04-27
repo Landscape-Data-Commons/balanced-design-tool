@@ -34,5 +34,3 @@ Clicking the button will generate a sample draw and display it on a map.
 
 ### 8) Download the points
 If the design meets expectations, this button will download a .ZIP containing the sample design and everything necessary to recreate it in the future in R without this tool.
-
-
