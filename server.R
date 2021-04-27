@@ -27,7 +27,7 @@ shinyServer(function(input, output, session) {
   )
   
   # Allow for wonking big files
-  options(shiny.maxRequestSize = 100 * 1024^2)
+  options(shiny.maxRequestSize = 30 * 1024^2)
   # Get a full stacktrace for debugging purposes, although it's unlikely to be ncessary or even helpful
   # options(shiny.fullstacktrace = TRUE)
   
