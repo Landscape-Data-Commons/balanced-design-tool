@@ -1,0 +1,15 @@
+version: "3"
+services:
+    app:
+        # Okay! So, this just means that the Dockerfile is in the current relative path
+        build: .
+        # This is what to call the whole mess so we can reference it in command line
+        image: sampling-tool
+        # Port mapping so that we can access the app
+        # Remember, the format is external port:internal port
+        ports:
+            - 3939:3838
+        # This will mount the current relative directory as /srv/benchmark-histograms
+        # This way we don't need to rebuild if we make file changes!
+        volumes:
+            - ./:/srv/shiny-server/sampling-tool
