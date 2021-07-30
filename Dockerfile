@@ -19,6 +19,6 @@ EXPOSE 3838
 # Run app
 # This makes sure that the app runs when the container is instanced
 # The host and port are probably unnecessary????
-CMD ["R", "-e", "shiny::runApp('/srv/shiny-server/sampling-tool', port = 3838)"]
+CMD ["R", "-e", "shiny::runApp('/srv/shiny-server/sampling-tool', host = '0.0.0.0', port = 3838)"]
 
 
