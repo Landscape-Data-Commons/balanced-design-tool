@@ -44,6 +44,10 @@ fluidPage(
       )
     )
   ),
+  # Application title
+  titlePanel(img(src = "combined_logos.png",
+                 align = "right"),
+             windowTitle = "Balanced Design Tool"),
   titlePanel("Balanced Design Tool"),
   sidebarLayout(
     sidebarPanel(
@@ -77,7 +81,8 @@ fluidPage(
       conditionalPanel(condition = "output.downloadready == 'yes'",
                        downloadButton(outputId = 'downloadData',
                                       label = 'Download Points as shapefile')),
-      textOutput(outputId = "grts_error")
+      textOutput(outputId = "grts_error"),
+      helpText("Created at the USDA-ARS Jornada Experimental Range in collaboration with the Bureau of Land Management")
     ),
     mainPanel(
       tabsetPanel(
