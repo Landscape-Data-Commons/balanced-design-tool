@@ -710,7 +710,7 @@ shinyServer(function(input, output, session) {
              # Pass this argument to the OS. It changes directories. When making Windows system calls, you need to invoke "cmd.exe /c" first
              system(paste0("cmd.exe /c cd ", dirname(shapes$datapath)))
              # Pass the extraction argument to the OS. I had to aim it at my 7zip install. If yours is elsewhere, change the filepath to it, but know that those escaped quotation marks are necessary if there are spaces in your folder names. Thanks, Microsoft
-             system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe e -aoa ", shapes$datapath))
+             system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z.exe\" e -aoa ", shapes$datapath))
              setwd(temp$origdir) # Restoring the working directory
              # Diagnostic terminal output to reassure a debugger that it is in fact reset to the original working directory
              print("Resetting working directory to:")
