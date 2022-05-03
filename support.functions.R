@@ -47,27 +47,27 @@ repair_geometry <- function(polygons,
 #' area.add()
 #' @export
 
-area.add <- function(spdf,
+area.add <- function(sf,
                      area.ha = TRUE,
                      area.sqkm = TRUE,
                      byid = TRUE
 ){
   ## Make sure the SPDF is in Albers equal area projection
-  spdf.albers <- sp::spTransform(x = spdf,
-                                 CRSobj = CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+  sf_albers <- sf::st_transform(x = sf,
+                                crs = sf::st_crs("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
   
-  ## Add the area in hectares, stripping the IDs from gArea() output
-  spdf@data$AREA.HA <- unname(rgeos::gArea(spdf.albers, byid = byid) * 0.0001)
+  ## Add the area in hectares, converted from square meters
+  sf$AREA.HA <- as.vector(sf::st_area(x = sf_albers)) * 0.0001
   ## Add the area in square kilometers, converting from hectares
-  spdf@data$AREA.SQKM <- spdf@data$AREA.HA * 0.01
+  sf$AREA.SQKM <- sf$AREA.HA * 0.01
   
   if (!(area.ha)) {
-    spdf@data$AREA.HA <- NULL
+    sf$AREA.HA <- NULL
   }
   if (!(area.sqkm)) {
-    spdf@data$AREA.SQKM <- NULL
+    sf$AREA.SQKM <- NULL
   }
-  return(spdf)
+  return(sf)
 }
 
 ## This will construct the design object necessary to feed to spsurvey::grts()
