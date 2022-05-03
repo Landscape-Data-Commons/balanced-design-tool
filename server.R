@@ -48,9 +48,9 @@ shinyServer(function(input, output, session) {
                  temp$directory <- gsub(input$uploadzip$datapath,
                                         pattern = "/\\d{1,3}$",
                                         replacement = "")
-
+                 
                  temp$polygons <- shape.extract()
-
+                 
                  if (!is.null(temp$polygons)) {
                    if (!class(temp$polygons) %in% c("SpatialPolygonsDataFrame")) {
                      showNotification(ui = "No single valid polygon shapefile found. Check the uploaded .zip file to make sure it only contains one polygon shapefile",
@@ -63,7 +63,6 @@ shinyServer(function(input, output, session) {
                      
                      temp$projection_original <- temp$polygons@proj4string
                      
-
                      if (!identical(temp$projection, temp$projection_original)) {
                        temp$polygons <- sp::spTransform(x = temp$polygons,
                                                         CRSobj = temp$projection)
@@ -751,7 +750,7 @@ shinyServer(function(input, output, session) {
                        type = "error")
       return(NULL)
     }
-    # Does
+    # Do we have all the necessary parts?
     if (length(shapefile_components) != 4) {
       return(NULL)
     }
