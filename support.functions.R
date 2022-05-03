@@ -7,14 +7,8 @@
 
 repair_geometry <- function(polygons,
                             verbose = FALSE) {
-  if(class(polygons) == "SpatialPolygonsDataFrame") {
-    polygons_sf <- sf::st_as_sf(polygons)
-    spdf <- TRUE
-  } else if ("sf" %in% class(polygons)) {
-    polygons_sf <- polygons
-    spdf <- FALSE
-  } else {
-    stop("polygons must either be a spatial polygons data frame or an sf object")
+  if (!("sf" %in% class(polygons))) {
+    stop("polygons must be an sf object")
   }
   
   validity_check <- sf::st_is_valid(polygons_sf)
@@ -34,10 +28,6 @@ repair_geometry <- function(polygons,
       message("No invalid geometry found.")
     }
     output <- polygons_sf
-  }
-  
-  if (spdf) {
-    output <- methods::as(output, "Spatial")
   }
   
   return(output)
