@@ -28,7 +28,7 @@ shinyServer(function(input, output, session) {
   
   # Allow for wonking big files
   options(shiny.maxRequestSize = 30 * 1024^2)
-  # Get a full stacktrace for debugging purposes, although it's unlikely to be ncessary or even helpful
+  # Get a full stacktrace for debugging purposes, although it's unlikely to be necessary or even helpful
   # options(shiny.fullstacktrace = TRUE)
   
   # When a valid shapefile-containing .zip gets uploaded, update the inputs that are available
