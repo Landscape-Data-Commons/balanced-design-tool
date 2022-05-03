@@ -1,13 +1,10 @@
 library(dplyr)
 library(ggplot2)
-library(spdplyr)
 library(leaflet)
 library(viridis)
 library(shiny)
-library(rgdal)
 library(spsurvey)
 library(sf)
-library(sp)
 source('support.functions.R')
 
 # Define server logic
