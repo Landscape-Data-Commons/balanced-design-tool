@@ -570,6 +570,7 @@ shinyServer(function(input, output, session) {
                  }
                  
                  # Make the map!
+                 message("Making the map!")
                  # But only if the points were sucessfully generated. If there was an error don't try
                  if ("sf" %in% class(temp$points)) {
                    output$pointmap <- renderLeaflet(expr = {
