@@ -565,6 +565,7 @@ shinyServer(function(input, output, session) {
                    }
                    
                    # Generate the points
+                   set.seed(input$seednum)
                    temp$points <- grts.gen()
                  }
                  
