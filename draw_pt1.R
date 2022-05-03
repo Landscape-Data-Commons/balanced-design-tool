@@ -8,7 +8,7 @@
 
 ## If any of these are not installed, remove the hashes and run the relevant line:
 # install.packages("dplyr")
-# install.packages("rgdal")
+# install.packages("sf")
 # install.packages("spsurvey")
 # install.packages("stringr")
 
