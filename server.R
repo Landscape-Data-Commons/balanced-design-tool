@@ -189,70 +189,10 @@ shinyServer(function(input, output, session) {
                    }
                    
                    # And also sanitize them WITHOUT PERMISSION
-                   # This bit is shamelessly stolen from another one of my packages
-                   # It'll dissolve the polygons by strata if they aren't already
-                   # unique_ids <- as.character(unique(temp$polygons@data[["STRATUM"]]))
-                   # if (length(unique_ids) < nrow(temp$polygons@data)) {
-                   #   showNotification(ui = "The attribute table has at least one stratum with more than one entry and the polygons will be dissolved by stratum. If this causes errors when fetching points, please upload polygons that are already dissolved by stratum.",
-                   #                    duration = NULL,
-                   #                    closeButton = TRUE,
-                   #                    id = "dissolve",
-                   #                    type = "message")
-                   #   
-                   #   poly_list <- lapply(X = unique_ids,
-                   #                       polygons = temp$polygons,
-                   #                       dissolve_field = "STRATUM",
-                   #                       FUN = function(X, polygons, dissolve_field){
-                   #                         polygons_current <- polygons[polygons@data[[dissolve_field]] == X, ]
-                   #                         polygons_current <- methods::as(sf::st_combine(sf::st_as_sf(polygons_current)), "Spatial")
-                   #                         df <- data.frame(id = X,
-                   #                                          stringsAsFactors = FALSE)
-                   #                         names(df) <- dissolve_field
-                   #                         rownames(df) <- polygons_current@polygons[[1]]@ID
-                   #                         polygons_current <- sp::SpatialPolygonsDataFrame(Sr = polygons_current,
-                   #                                                                          data = df)
-                   #                         return(polygons_current)
-                   #                       })
-                   #   temp$polygons <- do.call(rbind,
-                   #                            poly_list)
-                   #   
-                   #   temp$polygons <- area.add(temp$polygons,
-                   #                             area.sqkm = FALSE)
-                   # }
                    temp$polygons$STRATUM <- gsub(temp$polygons$STRATUM,
                                                  pattern = "\\W",
                                                  replacement = "")
                    
-                   
-                   # Let's make a static map of these!
-                   # output$strata_map <- renderPlot(expr = {
-                   #   # Convert to an sf object so ggplot can work with it
-                   #   polygons_sf <- as(temp$polygons, "sf")
-                   #   
-                   #   # Because of goofy legend garbage, we're going to adjust the aspect ratio
-                   #   polygons_bb <- sf::st_bbox(polygons_sf)
-                   #   aspect_ratio <- (polygons_bb[["ymax"]] - polygons_bb[["ymin"]]) / (polygons_bb[["xmax"]] - polygons_bb[["xmin"]])
-                   #   
-                   #   # Make the map as just polygons filled by stratum
-                   #   strata_map <- ggplot(data = polygons_sf) + 
-                   #     geom_sf(aes(fill = STRATUM)) +
-                   #     scale_fill_viridis_d() +
-                   #     theme(panel.background = element_rect(fill = "white",
-                   #                                           color = "gray90"),
-                   #           plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                   #           # Turning off the legend because it's frustratingly bad
-                   #           # There's no dynamic wrapping, so 90% of the time it clips past the plot boundary
-                   #           legend.position = "none",
-                   #           panel.grid = element_blank(),
-                   #           axis.title = element_blank(),
-                   #           axis.text = element_blank(),
-                   #           axis.ticks = element_blank()) +
-                   #     # Sometimes the legend would be too wide and get clipped, so we'll force it to be narrower
-                   #     guides(fill = guide_legend(title = NULL,
-                   #                                ncol = 3))
-                   #   
-                   #   strata_map
-                   # })
                    
                    # Make a list of strata so the user can see them
                    
@@ -524,8 +464,6 @@ shinyServer(function(input, output, session) {
                                   type = "warning")
                  
                  if (!is.null(temp$design) & !is.null(temp$polygons)) {
-                   # temp$seednum <- sample(1:999999, size = 1)
-                   
                    set.seed(input$seednum)
                    
                    # Write out the shapefile of the stratification polygons
@@ -804,7 +742,6 @@ shinyServer(function(input, output, session) {
                        closeButton = TRUE,
                        id = "grts_error",
                        type = "error")
-      # output$grts_error <- renderText(grts_output)
     } else {
       points <- grts_output
       
