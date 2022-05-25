@@ -1,4 +1,4 @@
-FROM landscapedatacommons/r-base:2.6.1
+FROM landscapedatacommons/r-base:4.0.5
 LABEL maintainer='Ken Ramsey <kramsey@jornada-vmail.nmsu.edu>'
 # make app folder
 RUN mkdir /balanced-design-tool
