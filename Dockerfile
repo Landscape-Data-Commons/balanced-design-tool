@@ -1,4 +1,4 @@
-FROM landscapedatacommons/r-base:4.0.5
+FROM landscapedatacommons/r-base:4.2.1
 LABEL maintainer='Ken Ramsey <kramsey@jornada-vmail.nmsu.edu>'
 # make app folder
 RUN mkdir /balanced-design-tool
@@ -8,5 +8,6 @@ COPY . /balanced-design-tool
 RUN echo "local({options(shiny.port = 3838, shiny.host = '0.0.0.0')})" > /usr/lib/R/etc/Rprofile.site
 # select port
 EXPOSE 3838
-CMD R -e "shiny::runApp('/balanced-design-tool', host = '0.0.0.0', port = 3838)"
+#CMD R -e "shiny::runApp('/balanced-design-tool', host = '0.0.0.0', port = 3838)"
+CMD R -e "shiny::runApp('/balanced-design-tool')"
 #CMD ["tail","-f", "/dev/null"]

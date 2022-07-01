@@ -33,7 +33,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: landscapedatacommons/balanced-designn-tool:4.0.5
+          tags: landscapedatacommons/balanced-designn-tool:4.2.1
       - uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -41,4 +41,4 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             docker service update shinyproxy-toolbox_balanced-design-tool \
-            --image=docker.io/landscapedatacommons/balanced-design-tool:4.0.5
+            --image=docker.io/landscapedatacommons/balanced-design-tool:4.2.1
