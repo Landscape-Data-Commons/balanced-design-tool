@@ -34,11 +34,11 @@ jobs:
           context: .
           push: true
           tags: landscapedatacommons/balanced-designn-tool:4.2.1
-      - uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script: |
-            docker service update shinyproxy-toolbox_balanced-design-tool \
-            --image=docker.io/landscapedatacommons/balanced-design-tool:4.2.1
+#      - uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.SERVER_IP }}
+#          username: ${{ secrets.SERVER_USERNAME }}
+#          password: ${{ secrets.SERVER_PASSWORD }}
+#          script: |
+#            docker service update shinyproxy-toolbox_balanced-design-tool \
+#            --image=docker.io/landscapedatacommons/balanced-design-tool:4.2.1
