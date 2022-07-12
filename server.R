@@ -1,13 +1,10 @@
 library(dplyr)
 library(ggplot2)
-library(spdplyr)
 library(leaflet)
 library(viridis)
 library(shiny)
-library(rgdal)
 library(spsurvey)
 library(sf)
-library(sp)
 source('support.functions.R')
 
 # Define server logic
@@ -23,12 +20,12 @@ shinyServer(function(input, output, session) {
                          # Save what the base working directory is
                          origdir = getwd(),
                          sessiontempdir = tempdir(),
-                         projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+                         projection = sf::st_crs("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
   )
   
   # Allow for wonking big files
   options(shiny.maxRequestSize = 30 * 1024^2)
-  # Get a full stacktrace for debugging purposes, although it's unlikely to be ncessary or even helpful
+  # Get a full stacktrace for debugging purposes, although it's unlikely to be necessary or even helpful
   # options(shiny.fullstacktrace = TRUE)
   
   # When a valid shapefile-containing .zip gets uploaded, update the inputs that are available
@@ -48,25 +45,25 @@ shinyServer(function(input, output, session) {
                  temp$directory <- gsub(input$uploadzip$datapath,
                                         pattern = "/\\d{1,3}$",
                                         replacement = "")
-
+                 
                  temp$polygons <- shape.extract()
-
+                 
                  if (!is.null(temp$polygons)) {
-                   if (!class(temp$polygons) %in% c("SpatialPolygonsDataFrame")) {
+                   if (!class(temp$polygons)[1] %in% c("sf")) {
                      showNotification(ui = "No single valid polygon shapefile found. Check the uploaded .zip file to make sure it only contains one polygon shapefile",
                                       duration = NULL,
                                       closeButton = TRUE,
                                       id = "polygonserror",
                                       type = "error")
                    } else {
-                     fieldnames <- names(temp$polygons@data)
+                     fieldnames <- names(temp$polygons)
                      
-                     temp$projection_original <- temp$polygons@proj4string
+                     temp$projection_original <- sf::st_crs(temp$polygons)
                      
-
+                     
                      if (!identical(temp$projection, temp$projection_original)) {
-                       temp$polygons <- sp::spTransform(x = temp$polygons,
-                                                        CRSobj = temp$projection)
+                       temp$polygons <- sf::st_transform(x = temp$polygons,
+                                                         crs = temp$projection)
                      }
                      
                      
@@ -114,7 +111,7 @@ shinyServer(function(input, output, session) {
                                             type = "message")
                          }
                          
-                         temp$polygons <- methods::as(polygons_repaired, "Spatial")
+                         temp$polygons <- polygons_repaired
                        } else {
                          showNotification(ui = "The geometry of the polygons is valid and does not require repair.",
                                           duration = NULL,
@@ -182,78 +179,17 @@ shinyServer(function(input, output, session) {
                  
                  if (input$strataname != "") {
                    if (input$strataname == "Do not stratify") {
-                     temp$polygons@data$STRATUM <- "Sample frame"
+                     temp$polygons$STRATUM <- "Sample frame"
                    } else {
                      # Add the relevant values to STRATUM
-                     temp$polygons@data$STRATUM <- as.character(temp$polygons@data[[input$strataname]])
+                     temp$polygons$STRATUM <- as.character(temp$polygons[[input$strataname]])
                    }
                    
                    # And also sanitize them WITHOUT PERMISSION
-                   temp$polygons@data$STRATUM <- gsub(temp$polygons@data$STRATUM,
-                                                      pattern = "\\W",
-                                                      replacement = "")
+                   temp$polygons$STRATUM <- gsub(temp$polygons$STRATUM,
+                                                 pattern = "\\W",
+                                                 replacement = "")
                    
-                   # This bit is shamelessly stolen from another one of my packages
-                   # It'll dissolve the polygons by strata if they aren't already
-                   # unique_ids <- as.character(unique(temp$polygons@data[["STRATUM"]]))
-                   # if (length(unique_ids) < nrow(temp$polygons@data)) {
-                   #   showNotification(ui = "The attribute table has at least one stratum with more than one entry and the polygons will be dissolved by stratum. If this causes errors when fetching points, please upload polygons that are already dissolved by stratum.",
-                   #                    duration = NULL,
-                   #                    closeButton = TRUE,
-                   #                    id = "dissolve",
-                   #                    type = "message")
-                   #   
-                   #   poly_list <- lapply(X = unique_ids,
-                   #                       polygons = temp$polygons,
-                   #                       dissolve_field = "STRATUM",
-                   #                       FUN = function(X, polygons, dissolve_field){
-                   #                         polygons_current <- polygons[polygons@data[[dissolve_field]] == X, ]
-                   #                         polygons_current <- methods::as(sf::st_combine(sf::st_as_sf(polygons_current)), "Spatial")
-                   #                         df <- data.frame(id = X,
-                   #                                          stringsAsFactors = FALSE)
-                   #                         names(df) <- dissolve_field
-                   #                         rownames(df) <- polygons_current@polygons[[1]]@ID
-                   #                         polygons_current <- sp::SpatialPolygonsDataFrame(Sr = polygons_current,
-                   #                                                                          data = df)
-                   #                         return(polygons_current)
-                   #                       })
-                   #   temp$polygons <- do.call(rbind,
-                   #                            poly_list)
-                   #   
-                   #   temp$polygons <- area.add(temp$polygons,
-                   #                             area.sqkm = FALSE)
-                   # }
-                   
-                   
-                   # Let's make a static map of these!
-                   # output$strata_map <- renderPlot(expr = {
-                   #   # Convert to an sf object so ggplot can work with it
-                   #   polygons_sf <- as(temp$polygons, "sf")
-                   #   
-                   #   # Because of goofy legend garbage, we're going to adjust the aspect ratio
-                   #   polygons_bb <- sf::st_bbox(polygons_sf)
-                   #   aspect_ratio <- (polygons_bb[["ymax"]] - polygons_bb[["ymin"]]) / (polygons_bb[["xmax"]] - polygons_bb[["xmin"]])
-                   #   
-                   #   # Make the map as just polygons filled by stratum
-                   #   strata_map <- ggplot(data = polygons_sf) + 
-                   #     geom_sf(aes(fill = STRATUM)) +
-                   #     scale_fill_viridis_d() +
-                   #     theme(panel.background = element_rect(fill = "white",
-                   #                                           color = "gray90"),
-                   #           plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                   #           # Turning off the legend because it's frustratingly bad
-                   #           # There's no dynamic wrapping, so 90% of the time it clips past the plot boundary
-                   #           legend.position = "none",
-                   #           panel.grid = element_blank(),
-                   #           axis.title = element_blank(),
-                   #           axis.text = element_blank(),
-                   #           axis.ticks = element_blank()) +
-                   #     # Sometimes the legend would be too wide and get clipped, so we'll force it to be narrower
-                   #     guides(fill = guide_legend(title = NULL,
-                   #                                ncol = 3))
-                   #   
-                   #   strata_map
-                   # })
                    
                    # Make a list of strata so the user can see them
                    
@@ -278,7 +214,7 @@ shinyServer(function(input, output, session) {
                    }
                    
                    # Build a lookup table of strata and their corresponding inputIds for use later
-                   temp$ui.lut <-  data.frame(STRATUM = unique(temp$polygons@data$STRATUM))
+                   temp$ui.lut <-  data.frame(STRATUM = unique(temp$polygons$STRATUM))
                    temp$ui.lut$base <- paste0("manualbase", rownames(temp$ui.lut))
                    temp$ui.lut$over <- paste0("manualover", rownames(temp$ui.lut))
                    
@@ -445,7 +381,7 @@ shinyServer(function(input, output, session) {
                      })
                    } else {
                      if (input$allocation == "Proportionally") {
-                       sizes <- dplyr::summarize(dplyr::group_by(temp$polygons@data, STRATUM),
+                       sizes <- dplyr::summarize(dplyr::group_by(sf::st_drop_geometry(temp$polygons), STRATUM),
                                                  AREA = sum(AREA.HA))
                        basecount <- input$basecount
                        minbase <- input$minbase
@@ -453,9 +389,9 @@ shinyServer(function(input, output, session) {
                        minoversampleproportion <- input$minoversampleproportion
                      }
                      if (input$allocation == "Equally") {
-                       sizes <- data.frame(STRATUM = temp$polygons@data$STRATUM,
+                       sizes <- data.frame(STRATUM = temp$polygons$STRATUM,
                                            AREA = rep(1,
-                                                      times = length(unique(temp$polygons@data$STRATUM))))
+                                                      times = length(unique(temp$polygons$STRATUM))))
                        basecount <- input$basecount
                        minbase <- 0
                        minoversample <- input$minoversample
@@ -525,25 +461,23 @@ shinyServer(function(input, output, session) {
                                   type = "warning")
                  
                  if (!is.null(temp$design) & !is.null(temp$polygons)) {
-                   # temp$seednum <- sample(1:999999, size = 1)
-                   
                    set.seed(input$seednum)
                    
                    # Write out the shapefile of the stratification polygons
                    # This is done when the stratum variable is selected, so this should be redundant??????
                    if (!identical(temp$projection, temp$projection_original)) {
-                     rgdal::writeOGR(obj = sp::spTransform(x = temp$polygons[, "STRATUM"],
-                                                           CRSobj = temp$projection_original),
-                                     dsn = temp$sessiontempdir,
-                                     layer = "sample_frame",
-                                     driver = "ESRI Shapefile",
-                                     overwrite_layer = TRUE)
+                     sf::st_write(obj = sf::st_transform(x = temp$polygons[, "STRATUM"],
+                                                         crs = temp$projection_original),
+                                  dsn = temp$sessiontempdir,
+                                  layer = "sample_frame",
+                                  driver = "ESRI Shapefile",
+                                  append = FALSE)
                    } else {
-                     rgdal::writeOGR(obj = temp$polygons[, "STRATUM"],
-                                     dsn = temp$sessiontempdir,
-                                     layer = "sample_frame",
-                                     driver = "ESRI Shapefile",
-                                     overwrite_layer = TRUE)
+                     sf::st_write(obj = temp$polygons[, "STRATUM"],
+                                  dsn = temp$sessiontempdir,
+                                  layer = "sample_frame",
+                                  driver = "ESRI Shapefile",
+                                  append = FALSE)
                    }
                    
                    
@@ -631,12 +565,14 @@ shinyServer(function(input, output, session) {
                    }
                    
                    # Generate the points
+                   set.seed(input$seednum)
                    temp$points <- grts.gen()
                  }
                  
                  # Make the map!
+                 message("Making the map!")
                  # But only if the points were sucessfully generated. If there was an error don't try
-                 if ("SpatialPointsDataFrame" %in% class(temp$points)) {
+                 if ("sf" %in% class(temp$points)) {
                    output$pointmap <- renderLeaflet(expr = {
                      # Initialize the map
                      map <- leaflet()
@@ -644,17 +580,18 @@ shinyServer(function(input, output, session) {
                      map <- addTiles(map = map)
                      # Make a strata palette to use for the map
                      strata_palette <- colorFactor(palette = "viridis",
-                                                   levels = sort(unique(temp$polygons@data[["STRATUM"]])))
+                                                   levels = sort(unique(temp$polygons[["STRATUM"]])))
                      # Add the stratification polygons
                      map <- addPolygons(map = map,
-                                        data = sp::spTransform(temp$polygons,
-                                                               CRSobj = temp$points@proj4string),
+                                        data = sf::st_transform(x = temp$polygons,
+                                                                crs = "+proj=longlat +datum=WGS84"),
                                         color = ~strata_palette(STRATUM),
                                         stroke = FALSE,
                                         fillOpacity = 0.7)
                      # Add in the generated points
                      map <- addCircleMarkers(map = map,
-                                             data = temp$points,
+                                             data = sf::st_transform(x = temp$points,
+                                                                     crs = "+proj=longlat +datum=WGS84"),
                                              stroke = TRUE,
                                              opacity = 0.9,
                                              color = "white",
@@ -685,7 +622,7 @@ shinyServer(function(input, output, session) {
                  removeNotification(id = "busy")
                })
   
-  # Extracting the contents of a .zip and returning an SPDF of the contents
+  # Extracting the contents of a .zip and returning an sf object from the contents
   shape.extract <- reactive({
     shapes <- input$uploadzip
     # If there's no input file
@@ -710,7 +647,7 @@ shinyServer(function(input, output, session) {
              # Pass this argument to the OS. It changes directories. When making Windows system calls, you need to invoke "cmd.exe /c" first
              system(paste0("cmd.exe /c cd ", dirname(shapes$datapath)))
              # Pass the extraction argument to the OS. I had to aim it at my 7zip install. If yours is elsewhere, change the filepath to it, but know that those escaped quotation marks are necessary if there are spaces in your folder names. Thanks, Microsoft
-             system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z\".exe e -aoa ", shapes$datapath))
+             system(paste0("cmd.exe /c \"C:\\Program Files\\7-Zip\\7z.exe\" e -aoa ", shapes$datapath))
              setwd(temp$origdir) # Restoring the working directory
              # Diagnostic terminal output to reassure a debugger that it is in fact reset to the original working directory
              print("Resetting working directory to:")
@@ -751,15 +688,17 @@ shinyServer(function(input, output, session) {
                        type = "error")
       return(NULL)
     }
-    # Does
+    # Do we have all the necessary parts?
     if (length(shapefile_components) != 4) {
       return(NULL)
     }
     
     # Read in the FIRST shapefile and add areas. Too bad if they included more than one!
-    polygons <- rgdal::readOGR(dsn = dirname(shapes$datapath),
-                               layer = temp$shapename[1])
-
+    polygons <- sf::st_read(dsn = dirname(shapes$datapath),
+                            layer = temp$shapename)
+    # polygons <- rgdal::readOGR(dsn = dirname(shapes$datapath),
+    #                            layer = temp$shapename[1])
+    
     polygons <- area.add(polygons,
                          area.sqkm = FALSE)
     
@@ -776,8 +715,8 @@ shinyServer(function(input, output, session) {
   # Update the points table
   observeEvent(eventExpr = temp$points,
                handlerExpr = {
-                 if (class(temp$points) %in% c("SpatialPointsDataFrame")) {
-                   output$pointdata <- renderTable(temp$points@data)
+                 if ("sf" %in% class(temp$points)) {
+                   output$pointdata <- renderTable(sf::st_drop_geometry(temp$points))
                  }
                })
   
@@ -786,10 +725,7 @@ shinyServer(function(input, output, session) {
     # DRAW SOME POINTS
     # BUT ALSO MAKE SURE ERRORS DON'T KILL THE TOOL
     grts_output <- tryCatch(grts.custom(design_object = temp$design,
-                                        design_name = gsub(input$projname,
-                                                           pattern = "\\W",
-                                                           replacement = ""),
-                                        sp_object = temp$polygons,
+                                        sample_frame = temp$polygons,
                                         stratum_field = "STRATUM",
                                         seed_number = input$seednum),
                             error = function(e){
@@ -799,29 +735,32 @@ shinyServer(function(input, output, session) {
                                                   collapse = "\n")))})
     
     # So if there was an error, we'll render that to the UI, otherwise proceed as normal
-    if (class(grts_output) == "character") {
+    message("The result of class(grts_output) is:")
+    message(paste(class(grts_output),
+                  collapse = ", "))
+    
+    if (!("sf" %in% class(grts_output))) {
       showNotification(ui = grts_output,
                        duration = NULL,
                        closeButton = TRUE,
                        id = "grts_error",
                        type = "error")
-      # output$grts_error <- renderText(grts_output)
     } else {
       points <- grts_output
       
       if (!identical(temp$projection, temp$projection_original)) {
-        rgdal::writeOGR(obj = sp::spTransform(x = points,
-                                              CRSobj = temp$projection_original),
-                        dsn = temp$sessiontempdir,
-                        layer = "sample_draw",
-                        driver = "ESRI Shapefile",
-                        overwrite_layer = TRUE)
+        sf::st_write(obj = sf::st_transform(x = points,
+                                            crs = temp$projection_original),
+                     dsn = temp$sessiontempdir,
+                     layer = "sample_draw",
+                     driver = "ESRI Shapefile",
+                     append = FALSE)
       } else {
-        rgdal::writeOGR(obj = points,
-                        dsn = temp$sessiontempdir,
-                        layer = "sample_draw",
-                        driver = "ESRI Shapefile",
-                        overwrite_layer = TRUE)
+        sf::st_write(obj = points,
+                     dsn = temp$sessiontempdir,
+                     layer = "sample_draw",
+                     driver = "ESRI Shapefile",
+                     append = FALSE)
       }
       
       if (!any(grepl(x = list.files(temp$sessiontempdir), pattern = "sample_draw.shp"))) {
