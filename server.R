@@ -735,9 +735,7 @@ shinyServer(function(input, output, session) {
                                                   collapse = "\n")))})
     
     # So if there was an error, we'll render that to the UI, otherwise proceed as normal
-    message("The result of class(grts_output) is:")
-    message(paste(class(grts_output),
-                  collapse = ", "))
+    message("Checking to make sure that grts_output is an sf object")
     
     if (!("sf" %in% class(grts_output))) {
       showNotification(ui = grts_output,
