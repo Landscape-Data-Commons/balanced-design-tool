@@ -89,8 +89,7 @@ fluidPage(
         id = "maintabs",
         
         tabPanel("Instructions",
-                 includeHTML("instructions.html"),
-                 HTML('<img style="float: right"; src="JornadaLogo_1.png"/>')
+                 includeHTML("instructions.html")
         ),
         
         tabPanel(title = "Point Allocation",
