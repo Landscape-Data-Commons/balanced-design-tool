@@ -5,6 +5,8 @@ output:
         highlight: null
         mathjax: null
 ---
+This tool enables users to draw spatially-balanced, statistically valid sampling designs for an uploaded area of interest and, if needed, strata. It leverages the Generalized Random Tessellation Stratified (GRTS) algorithm as implemented in the [spsurvey R package](https://cran.r-project.org/web/packages/spsurvey/).
+
 ### 1) Upload a zipped polygon shapefile
 This should be a .ZIP file containing only the components of a single polygon shapefile. For example, if the shapefile were named "rio_grande_strata" the .ZIP would need to contain:
 

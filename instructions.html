@@ -1,19 +1,43 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
 
-<title>instructions.utf8.md</title>
+<title>instructions.knit</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+
 
 
 
@@ -34,9 +58,16 @@
 
 
 
+<p>This tool enables users to draw spatially-balanced, statistically
+valid sampling designs for an uploaded area of interest and, if needed,
+strata. It leverages the Generalized Random Tessellation Stratified
+(GRTS) algorithm as implemented in the <a href="https://cran.r-project.org/web/packages/spsurvey/">spsurvey R
+package</a>.</p>
 <div id="upload-a-zipped-polygon-shapefile" class="section level3">
 <h3>1) Upload a zipped polygon shapefile</h3>
-<p>This should be a .ZIP file containing only the components of a single polygon shapefile. For example, if the shapefile were named “rio_grande_strata” the .ZIP would need to contain:</p>
+<p>This should be a .ZIP file containing only the components of a single
+polygon shapefile. For example, if the shapefile were named
+“rio_grande_strata” the .ZIP would need to contain:</p>
 <ul>
 <li>rio_grande_strata.dbf</li>
 <li>rio_grande_strata.prj</li>
@@ -47,15 +78,19 @@
 </div>
 <div id="name-the-project" class="section level3">
 <h3>2) Name the project</h3>
-<p>This will default to the name of the shapefile, but you can change it to anything composed of only alphanumeric characters and underscores.</p>
+<p>This will default to the name of the shapefile, but you can change it
+to anything composed of only alphanumeric characters and
+underscores.</p>
 </div>
 <div id="select-a-field-to-stratify-by" class="section level3">
 <h3>3) Select a field to stratify by</h3>
-<p>Your options are the variables/attribute fields in your shapefile. If you aren’t stratifying, use the option “Do not stratify”.</p>
+<p>Your options are the variables/attribute fields in your shapefile. If
+you aren’t stratifying, use the option “Do not stratify”.</p>
 </div>
 <div id="update-stratification" class="section level3">
 <h3>4) Update stratification</h3>
-<p>Clicking the button will start the next step and kick off background processing to prepare for the draw.</p>
+<p>Clicking the button will start the next step and kick off background
+processing to prepare for the draw.</p>
 </div>
 <div id="decide-how-to-allocate-the-points" class="section level3">
 <h3>5) Decide how to allocate the points</h3>
@@ -63,15 +98,20 @@
 </div>
 <div id="update-allocation-information" class="section level3">
 <h3>6) Update allocation information</h3>
-<p>Clicking the button commits your decisions and makes it possible to fetch a sample draw. You can still change your allocation, but need to click the button to commit the changes.</p>
+<p>Clicking the button commits your decisions and makes it possible to
+fetch a sample draw. You can still change your allocation, but need to
+click the button to commit the changes.</p>
 </div>
 <div id="fetch-the-points" class="section level3">
 <h3>7) Fetch the points</h3>
-<p>Clicking the button will generate a sample draw and display it on a map.</p>
+<p>Clicking the button will generate a sample draw and display it on a
+map.</p>
 </div>
 <div id="download-the-points" class="section level3">
 <h3>8) Download the points</h3>
-<p>If the design meets expectations, this button will download a .ZIP containing the sample design and everything necessary to recreate it in the future in R without this tool.</p>
+<p>If the design meets expectations, this button will download a .ZIP
+containing the sample design and everything necessary to recreate it in
+the future in R without this tool.</p>
 </div>
 
 
