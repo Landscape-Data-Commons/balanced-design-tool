@@ -466,14 +466,14 @@ shinyServer(function(input, output, session) {
                    # Write out the shapefile of the stratification polygons
                    # This is done when the stratum variable is selected, so this should be redundant??????
                    if (!identical(temp$projection, temp$projection_original)) {
-                     sf::st_write(obj = sf::st_transform(x = temp$polygons[, "STRATUM"],
+                     sf::st_write(obj = sf::st_transform(x = sf::st_zm(x = temp$polygons)[, "STRATUM"],
                                                          crs = temp$projection_original),
                                   dsn = temp$sessiontempdir,
                                   layer = "sample_frame",
                                   driver = "ESRI Shapefile",
                                   append = FALSE)
                    } else {
-                     sf::st_write(obj = temp$polygons[, "STRATUM"],
+                     sf::st_write(obj = sf::st_zm(x = temp$polygons)[, "STRATUM"],
                                   dsn = temp$sessiontempdir,
                                   layer = "sample_frame",
                                   driver = "ESRI Shapefile",
@@ -570,9 +570,14 @@ shinyServer(function(input, output, session) {
                  }
                  
                  # Make the map!
-                 message("Making the map!")
+                 message(paste0("Checking to see if the class of temp$points (",
+                                paste(class(temp$points),
+                                      collapse = ", "),
+                                ") contains 'sf' and the answer is ",
+                                "sf" %in% class(temp$points)))
                  # But only if the points were sucessfully generated. If there was an error don't try
                  if ("sf" %in% class(temp$points)) {
+                   message("Making the map!")
                    output$pointmap <- renderLeaflet(expr = {
                      # Initialize the map
                      map <- leaflet()
@@ -615,6 +620,10 @@ shinyServer(function(input, output, session) {
                    updateTabsetPanel(session,
                                      inputId = "maintabs",
                                      selected = "Point Map")
+                   message("Displaying map")
+                 } else {
+                   output$pointmap <- NULL
+                   message("No map to display")
                  }
                  
                  
@@ -696,6 +705,7 @@ shinyServer(function(input, output, session) {
     # Read in the FIRST shapefile and add areas. Too bad if they included more than one!
     polygons <- sf::st_read(dsn = dirname(shapes$datapath),
                             layer = temp$shapename)
+    polygons <- sf::st_zm(polygons)
     # polygons <- rgdal::readOGR(dsn = dirname(shapes$datapath),
     #                            layer = temp$shapename[1])
     
@@ -706,12 +716,7 @@ shinyServer(function(input, output, session) {
     
     return(polygons)
   })
-  
-  # Just listening for if something that should update the map changes
-  listen.map <- reactive({
-    list(input$strataname, input$updatemap, temp$points)
-  })
-  
+
   # Update the points table
   observeEvent(eventExpr = temp$points,
                handlerExpr = {
