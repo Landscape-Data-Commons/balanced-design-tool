@@ -1,0 +1,244 @@
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,300;0,400;0,500;0,700;0,800;0,900;1,100;1,300;1,400;1,500;1,700;1,800;1,900&display=swap');
+
+/* HTML element styling */
+h2{
+  font-family: 'Montserrat', sans-serif;
+}
+
+body{
+  font-family: 'Montserrat', sans-serif;
+}
+
+hr {
+  border-top: 1px solid #454545;
+}
+
+br {
+  display: block;
+}
+
+h3, h4{
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+div.footer a{
+  color: #454545;
+}
+
+div.download-button a{
+  color: white;
+}
+
+/* Set link color in the app info */
+a, a:link, a:visited{
+  color: #fa8943;
+  /* color: #fa8943; */
+}
+
+/* Class styling */
+.progress-bar {
+  background-color: #fa8943;
+  /* background-color: #fa8943; */
+}
+
+.allocation-column-label {
+  font-weight: bold;
+  text-align: center;
+}
+
+.tool-title{
+  padding-top: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  font-size: 200%;
+}
+
+.action-button {
+  background-color: #454545;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+}
+
+/* Side panel */
+/* Coloring radio buttons and checkboxes */
+.shiny-bound-input {
+  accent-color: #fa8943;
+  /* accent-color: #fa8943; */
+}
+
+/* Text linking to Data and Data Configuration tabs once data are ready */
+.data-prompt {
+  font-weight: bold;
+}
+
+.nav-tabs {
+  font-weight: bold;
+}
+
+/* Select import method dropdown */
+.control-label {
+  margin-top:10px;
+}
+
+/* Reduce padding around side panel */
+.col-sm-4 {
+  padding: 0 5px;
+}
+
+/* Information section on main tab */
+.app-info {
+  background-color: #454545;
+  color: white;
+  font-weight: 400;
+  margin: -11px -11px 5px;
+  border-radius: 5px 5px 0 0;
+  padding: 10px 10px 20px;
+}
+
+/* Well is the side panel div */
+.well {
+  box-shadow: 3px 3px 3px 3px #888888;
+  background-color: #eeeeee;
+  /* Expanded the bottom margin to try to avoid overlap with the footer */
+  margin: 10px 10px 200px 0;
+  padding: 10px;
+}
+
+.shiny-input-container {
+  margin-bottom: 10px;
+}
+
+/* Main panel */
+.main-panel-body {
+  margin-bottom: 100px;
+}
+
+.load-message{
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Navbar */
+.navbar{
+  font-family: 'Montserrat', sans-serif;
+}
+/* This gets rid of the top margin on the page */
+.navbar-brand{
+  margin: -10px 0 0 0
+}
+
+.content {
+  padding-top: 10px;
+}
+
+/* Colors for navbar */
+.navbar-default .navbar-nav > .active > a,
+                             .navbar-default .navbar-nav > .active > a:focus {background-color:#fa8943 !important;
+                             }
+/* .navbar-default .navbar-nav > .active > a,
+                             .navbar-default .navbar-nav > .active > a:focus {background-color:#fa8943 !important;
+                             } */
+
+/* Formatting for shiny containers */
+.info-btn {
+  /* background-color: #4f4f4f; */
+  background-color: #454545;
+  color: white;
+  margin: auto;
+  vertical-align: middle;
+  border-radius: 30%;
+}
+
+.btn {
+  /* background-color: #4f4f4f; */
+  background-color: #454545;
+  color: white;
+  vertical-align: middle;
+}
+
+.checkbox {
+  margin-top: 0;
+}
+
+.control-label {
+  margin-top: 0;
+}
+
+/* Footer */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #dddddd;
+  color: white;
+  vertical-align: middle;
+  text-align: center;
+  font-weight: bold;
+  font-size: 2rem;
+  margin-top: auto;
+  z-index: 420;
+}
+
+.modal-footer {
+  text-align: center;
+}
+
+/* Adjusting the notification aesthetics and position */
+.shiny-notification {
+          position: fixed;
+          top: calc(25%);
+          left: calc(5%);
+          /* These two width arguments make it so that the message fits to the
+          content of the notification but starts to wrap if it'd exceed a
+          certain width */
+          width: fit-content;
+          max-width: calc(20%);
+          opacity: 1;
+          /* background-color: #4f4f4f; */
+          background-color: #454545;
+          color: white;
+          font-family: 'Montserrat', sans-serif;
+          font-weight: bold;
+          font-size: large;
+          box-shadow: 0 0 0 rgba(181,181,181, 0.6);
+          animation: pulse 2s infinite;
+}
+
+/* Make the close button stand out on the dark background */
+.shiny-notification-close {
+  color: white;
+  font-weight: bold;
+  font-size: large;
+}
+
+/* Animation for the notification boxes */
+@-webkit-keyframes pulse {
+          0% {
+            -webkit-box-shadow: 0 0 0 0 rgba(181,181,181, 0.6);
+          }
+          70% {
+            -webkit-box-shadow: 0 0 0 15px rgba(181,181,181, 0);
+          }
+          100% {
+            -webkit-box-shadow: 0 0 0 0 rgba(181,181,181, 0);
+          }
+        }
+@keyframes pulse {
+  0% {
+    -moz-box-shadow: 0 0 0 0 rgba(181,181,181, 0.6);
+    box-shadow: 0 0 0 0 rgba(181,181,181, 0.6);
+  }
+  70% {
+    -moz-box-shadow: 0 0 0 15px rgba(181,181,181, 0);
+    box-shadow: 0 0 0 15px rgba(181,181,181, 0);
+  }
+  100% {
+    -moz-box-shadow: 0 0 0 0 rgba(181,181,181, 0);
+    box-shadow: 0 0 0 0 rgba(181,181,181, 0);
+  }
+}
