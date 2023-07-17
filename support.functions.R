@@ -173,6 +173,11 @@ grts.custom <- function(design_object,
                           sum(X[["over"]])
                         })
   
+  current_projection <- sf::st_crs(sample_frame)
+  
+  sample_frame <- sf::st_transform(sample_frame,
+                                   crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+  
   grts_output <- spsurvey::grts(sframe = sample_frame,
                                 n_base = base_counts,
                                 stratum_var = stratum_field,
@@ -226,6 +231,9 @@ grts.custom <- function(design_object,
   sample_sites <- do.call(rbind,
                           points_list)
 
+  message(paste0("sample_sites class is: ",
+                 paste(class(sample_sites),
+                       collapse = ", ")))
   
   ## Rename the plots with the strata
   sample_sites[["PLOTID"]] <- paste0(sample_sites[["STRATUM"]],
