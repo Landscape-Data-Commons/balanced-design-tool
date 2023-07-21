@@ -144,7 +144,7 @@ shinyServer(function(input, output, session) {
   output$polygons_done_ui <- renderUI(if (input$strataname != "") {
     tagList(br(),
             fluidRow(column(width = 10,
-                            p(class = "data-prompt",
+                            p(class = "next-step-message",
                               "Your polygons are ready! The next step is to check the configuration in the",
                               a("Point Allocation tab.",
                                 onclick = "tabJump('Point Allocation')")))))
@@ -153,7 +153,7 @@ shinyServer(function(input, output, session) {
   output$configuration_done_ui <- renderUI(if (req(!is.null(workspace$points))) {
     tagList(br(),
             fluidRow(column(width = 10,
-                            p(class = "data-prompt",
+                            p(class = "next-step-message",
                               "Your design is complete! Check it out and download the points in the",
                               a("Design tab.",
                                 onclick = "tabJump('Design')")))))
@@ -162,7 +162,7 @@ shinyServer(function(input, output, session) {
   output$no_polygons_yet_ui <- renderUI(if (req(is.null(workspace$polygons))) {
     tagList(br(),
             fluidRow(column(width = 10,
-                            p(class = "data-prompt",
+                            p(class = "next-step-message",
                               "You still need to upload polygons. Please do so in the",
                               a("Polygon Setup tab.",
                                 onclick = "tabJump('Polygon Setup')")))))

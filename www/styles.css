@@ -69,7 +69,15 @@ a, a:link, a:visited{
 }
 
 /* Text linking to Data and Data Configuration tabs once data are ready */
-.data-prompt {
+.busy-message {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+.next-step-message {
+  font-family: 'Montserrat', sans-serif;
   font-weight: bold;
 }
 

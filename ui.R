@@ -181,7 +181,7 @@ fluidPage(
                    condition = "$('html').hasClass('shiny-busy')",
                    br(),
                    HTML(
-                     "<div class = 'load-message'><img src = 'busy_icon_complex.svg' height = '40rem'>Working! Please wait.<img src = 'busy_icon_complex.svg' height = '40rem'></div>"
+                     "<div class = 'busy-message'><img src = 'busy_icon_complex.svg' height = '40rem'>Working! Please wait.<img src = 'busy_icon_complex.svg' height = '40rem'></div>"
                    )
                  ),
                  fluidRow(column(width = 12,
