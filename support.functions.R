@@ -7,14 +7,8 @@
 
 repair_geometry <- function(polygons,
                             verbose = FALSE) {
-  if(class(polygons) == "SpatialPolygonsDataFrame") {
-    polygons_sf <- sf::st_as_sf(polygons)
-    spdf <- TRUE
-  } else if ("sf" %in% class(polygons)) {
-    polygons_sf <- polygons
-    spdf <- FALSE
-  } else {
-    stop("polygons must either be a spatial polygons data frame or an sf object")
+  if (!("sf" %in% class(polygons))) {
+    stop("polygons must be an sf object")
   }
   
   validity_check <- sf::st_is_valid(polygons_sf)
@@ -36,10 +30,6 @@ repair_geometry <- function(polygons,
     output <- polygons_sf
   }
   
-  if (spdf) {
-    output <- methods::as(output, "Spatial")
-  }
-  
   return(output)
 }
 
@@ -57,27 +47,27 @@ repair_geometry <- function(polygons,
 #' area.add()
 #' @export
 
-area.add <- function(spdf,
+area.add <- function(sf,
                      area.ha = TRUE,
                      area.sqkm = TRUE,
                      byid = TRUE
 ){
   ## Make sure the SPDF is in Albers equal area projection
-  spdf.albers <- sp::spTransform(x = spdf,
-                                 CRSobj = CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+  sf_albers <- sf::st_transform(x = sf,
+                                crs = sf::st_crs("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
   
-  ## Add the area in hectares, stripping the IDs from gArea() output
-  spdf@data$AREA.HA <- unname(rgeos::gArea(spdf.albers, byid = byid) * 0.0001)
+  ## Add the area in hectares, converted from square meters
+  sf$AREA.HA <- as.vector(sf::st_area(x = sf_albers)) * 0.0001
   ## Add the area in square kilometers, converting from hectares
-  spdf@data$AREA.SQKM <- spdf@data$AREA.HA * 0.01
+  sf$AREA.SQKM <- sf$AREA.HA * 0.01
   
   if (!(area.ha)) {
-    spdf@data$AREA.HA <- NULL
+    sf$AREA.HA <- NULL
   }
   if (!(area.sqkm)) {
-    spdf@data$AREA.SQKM <- NULL
+    sf$AREA.SQKM <- NULL
   }
-  return(spdf)
+  return(sf)
 }
 
 ## This will construct the design object necessary to feed to spsurvey::grts()
@@ -156,76 +146,99 @@ allocate.panels <- function(stratum.sizes,
 #' @return A Spatial Points Data Frame of the sampling locations with the fields \code{PLOTID}, \code{STRATUM}, \code{PANEL}, \code{IntPtWt} (initial point weight), \code{xcoord}, and \code{ycoord}
 #' @export
 grts.custom <- function(design_object,
-                        design_name = "Design name",
-                        source_frame = "sp.object",
-                        sp_object = NULL,
-                        in_shape = NULL,
+                        sample_frame = NULL,
                         stratum_field = "STRATUM",
                         seed_number = NULL
 ){
   if (!is.null(seed_number)) {
     set.seed(seed_number)
   }
-  if (!is.null(sp_object)) {
-    source_frame <- "sp.object"
-    if (!(stratum_field %in% names(sp_object))) {
-      stop("The variable stratum_field was not found in sp_object. Check case and spelling.")
+  if (!is.null(sample_frame)) {
+    if (!(stratum_field %in% names(sample_frame))) {
+      stop("The variable stratum_field was not found in sample_frame. Check case and spelling.")
     }
-  } else if (!is.null(in_shape)) {
-    source_frame <- "shapefile"
-    in_shape <- gsub(in_shape, pattern = "\\.(shp)|(shp)$", replacement = "")
   } else {
-    stop("Provide either an SPDF as sp_object or a filepath to a shapefile as in_shape.")
-  }
-  if (source_frame == "sp.object" & is.null(sp_object)) {
-    stop("Please provide an SPDF as sp_object.")
-  }
-  if (source_frame == "shapefile" & is.null(in_shape)) {
-    stop("Please provide a filepath to a shapefile as in_shape.")
+    stop("Provide an sf object as sample_frame.")
   }
   
-  # Set type.frame value depending on type of spdf
-  type_frame <- switch(class(sp_object),
-                       "SpatialPolygonsDataFrame" = {"area"},
-                       "SpatialPointsDataFrame" = {"finite"})
+  # So, design objects were the old way of feeding info into GRTS
+  # This grabs the relevant information to feed to modern grts()
+  base_counts <- sapply(X = design_object,
+                        FUN = function(X){
+                          sum(X[["panel"]])
+                        })
   
-  ## Invoke spsurvey::grts() first
-  sample_sites <- spsurvey::grts(design = design_object,
-                                 DesignID = design_name,
-                                 type.frame = type_frame,
-                                 src.frame = source_frame,
-                                 sp.object = sp_object,
-                                 in.shape = in_shape,
-                                 stratum = stratum_field,
-                                 shapefile = FALSE)
+  over_counts <- sapply(X = design_object,
+                        FUN = function(X){
+                          sum(X[["over"]])
+                        })
   
-  ## Assign projection info to the sample sites SPDF
-  if (!is.null(sp_object)) {
-    sp::proj4string(sample_sites) <- sp_object@proj4string
-  } else {
-    sp::proj4string(sample_sites) <- rgdal::readOGR(dsn = gsub(in_shape,
-                                                               pattern = "/([A-z]|[0-9])+$",
-                                                               replacement = ""),
-                                                    layer = gsub(in_shape,
-                                                                 pattern = "/([A-z]|[0-9])+$"))@proj4string
-  }
-  ## Reproject the sample sites to Geographic DD NAD83
-  sample_sites <- sp::spTransform(sample_sites, sp::CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs"))
-  ## update the X and Y coordinate values
-  sample_sites[["xcoord"]] <- sp::coordinates(sample_sites)[, 1]
-  sample_sites[["ycoord"]] <- sp::coordinates(sample_sites)[, 2]
+  current_projection <- sf::st_crs(sample_frame)
   
-  ## Dropping the extra fields and renaming the remaining fields
-  fields_relevant <- c("siteID", "stratum", "panel", "wgt", "xcoord", "ycoord")
-  sample_sites@data <- sample_sites@data[, fields_relevant]
-  names(sample_sites@data) <- c("PLOTID", "STRATUM", "PANEL", "IntPtWt", "xcoord", "ycoord")
+  sample_frame <- sf::st_transform(sample_frame,
+                                   crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
   
-  # Change "OverSamp" to "OverSample + [STRATUM]"
-  oversample_panel_names <- paste(sample_sites@data[["STRATUM"]][sample_sites@data[["PANEL"]] == "OverSamp"], "Oversample")
-  sample_sites@data[["PANEL"]][sample_sites@data[["PANEL"]] == "OverSamp"] <- oversample_panel_names
+  grts_output <- spsurvey::grts(sframe = sample_frame,
+                                n_base = base_counts,
+                                stratum_var = stratum_field,
+                                seltype = "equal",
+                                n_over = over_counts)
+  
+  points_list <- lapply(X = names(base_counts),
+                        design_object = design_object,
+                        grts_output = grts_output,
+                        FUN = function(X, design_object, grts_output){
+                          # just for convenience and clarity
+                          current_stratum <- X
+                          
+                          # Grab the base points
+                          current_base_points <- grts_output$sites_base[grts_output$sites_base$stratum == current_stratum, ]
+                          # grts() no longer supports panels, but people still want them, so we'll grab the info
+                          # from the design object and make a vector
+                          panel_info <- design_object[[current_stratum]]$panel
+                          panels <- as.vector(sapply(X = names(panel_info),
+                                                     panel_info = panel_info,
+                                                     FUN = function(X, panel_info){
+                                                       rep(x = X,
+                                                           times = panel_info[X])
+                                                     }))
+                          current_base_points$siteuse <- panels
+                          
+                          current_over_points <- grts_output$sites_over[grts_output$sites_over$stratum == current_stratum, ]
+                          current_over_points$siteuse <- "Oversample"
+                          
+                          current_points <- rbind(current_base_points,
+                                                  current_over_points)
+                          
+                          vars_to_keep <- c("siteID", "stratum", "siteuse", "wgt", "lon_WGS84", "lat_WGS84")
+                          
+                          current_points <- current_points[, vars_to_keep]
+                          
+                          names(current_points)[names(current_points) == "siteID"] <- "PLOTID"
+                          names(current_points)[names(current_points) == "stratum"] <- "STRATUM"
+                          names(current_points)[names(current_points) == "siteuse"] <- "PANEL"
+                          names(current_points)[names(current_points) == "wgt"] <- "IntPtWt"
+                          names(current_points)[names(current_points) == "lon_WGS84"] <- "xcoord"
+                          names(current_points)[names(current_points) == "lat_WGS84"] <- "ycoord"
+                          
+                          current_points$PLOTID <- gsub(x = current_points$PLOTID,
+                                                        pattern = "Site",
+                                                        replacement = current_stratum)
+                          
+                          current_points
+                        })
+  
+  sample_sites <- do.call(rbind,
+                          points_list)
+  
+  message(paste0("sample_sites class is: ",
+                 paste(class(sample_sites),
+                       collapse = ", ")))
   
   ## Rename the plots with the strata
-  sample_sites@data[["PLOTID"]] <- paste0(sample_sites@data[["STRATUM"]], stringr::str_extract(string = sample_sites@data[["PLOTID"]], pattern = "-\\d{1,4}$"))
+  sample_sites[["PLOTID"]] <- paste0(sample_sites[["STRATUM"]],
+                                     stringr::str_extract(string = sample_sites[["PLOTID"]],
+                                                          pattern = "-\\d{1,4}$"))
   
   return(sample_sites)
 }

@@ -1,0 +1,81 @@
+<svg
+  xmlns = "http://www.w3.org/2000/svg"
+  width = "200px"
+  height = "200px">
+  <circle class = "pulsing-ring" cx = "100" cy = "100" r = "65" fill = "none" stroke-width = "4" stroke = "#fa8943"></circle>
+  <circle class = "ring-of-rings" cx = "150" cy = "100"></circle>
+  <circle class = "ring-of-rings" cx = "131.17" cy = "139.09"></circle>
+  <circle class = "ring-of-rings" cx = "88.87" cy = "148.75"></circle>
+  <circle class = "ring-of-rings" cx = "54.95" cy = "121.69"></circle>
+  <circle class = "ring-of-rings" cx = "54.95" cy = "78.31"></circle>
+  <circle class = "ring-of-rings" cx = "88.87" cy = "51.25"></circle>
+  <circle class = "ring-of-rings" cx = "131.17" cy = "60.91"></circle>
+  <!-- <path class = "ring-of-rings" d = "M150 100 L131.17 139.09 L88.87 148.75 L54.95 121.69 L54.95 78.31 L88.87 51.25 L131.17 60.91 Z"></path> -->
+  <path class = "outer-ring" d = "M135 100 L121.82 127.36 L92.21 134.12 L68.47 115.19 L68.47 84.81 L92.21 65.88 L121.82 72.64 Z" stroke-width = "5"></path>
+  <path class = "outer-ring" d = "M128 100 L117.46 121.89 L93.77 127.3 L74.77 112.15 L74.77 87.85 L93.77 72.7 L117.46 78.11 Z" stroke-width = "2"></path>
+<style>
+  .ring-of-rings {
+    r: 10;
+	fill: none;
+	stroke-width: 3;
+	stroke: #fa8943;
+    transform-origin: center;
+	animation-name: carousel-clockwise;
+	animation-duration: 20s;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+  }
+  .outer-ring {
+	fill: none;
+	stroke: #fa8943;
+    transform-origin: center;
+	animation-name: carousel-counterclockwise;
+	animation-duration: 7s;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+  }
+  .pulsing-ring {
+    transform-origin: center;
+	animation-name: pulse;
+	animation-duration: 2s;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+  }
+  
+  @keyframes carousel-clockwise {
+    from {
+	  transform: rotate(0deg);
+	}
+	to {
+	  transform: rotate(359deg);
+	}
+  }
+    @keyframes carousel-counterclockwise {
+    from {
+	  transform: rotate(0deg);
+	}
+	to {
+	  transform: rotate(-359deg);
+	}
+  }
+  
+  @keyframes pulse {
+    0% {
+	  transform: scale(0);
+	  opacity: 0;	  
+	}
+	50% {
+	  transform: scale(0);
+	  opacity: 0;	  
+	}
+	90% {
+	  transform: scale(0.95);
+	  opacity: 1;	  
+	}
+	100% {
+	  transform: scale(1);
+	  opacity: 0;
+	}
+  }
+</style>
+</svg>
