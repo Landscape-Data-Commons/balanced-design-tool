@@ -33,6 +33,18 @@ a, a:link, a:visited{
 }
 
 /* Class styling */
+.image-row::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.logo {
+  float: right;
+  padding: 5px;
+  height: 60px;
+}
+
 .benchmark-ui-label {
   font-family: 'Montserrat', sans-serif;
   font-weight: bold;
