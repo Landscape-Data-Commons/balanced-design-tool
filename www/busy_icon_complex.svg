@@ -21,7 +21,7 @@
 	stroke: #fa8943;
     transform-origin: center;
 	animation-name: carousel-clockwise;
-	animation-duration: 30s;
+	animation-duration: 20s;
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
   }
@@ -30,14 +30,14 @@
 	stroke: #fa8943;
     transform-origin: center;
 	animation-name: carousel-counterclockwise;
-	animation-duration: 15s;
+	animation-duration: 7s;
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
   }
   .pulsing-ring {
     transform-origin: center;
 	animation-name: pulse;
-	animation-duration: 3s;
+	animation-duration: 2s;
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
   }

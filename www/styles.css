@@ -23,29 +23,40 @@ h3, h4{
   margin-top: 10px;
 }
 
-div.footer a{
-  color: #454545;
-}
-
-div.download-button a{
-  color: white;
+div.footer a {
+  color: #333;
 }
 
 /* Set link color in the app info */
 a, a:link, a:visited{
   color: #fa8943;
-  /* color: #fa8943; */
 }
 
 /* Class styling */
-.progress-bar {
-  background-color: #fa8943;
-  /* background-color: #fa8943; */
+.image-row::after {
+  content: "";
+  clear: both;
+  display: table;
 }
 
-.allocation-column-label {
+.logo {
+  float: right;
+  padding: 5px;
+  height: 60px;
+}
+
+.benchmark-ui-label {
+  font-family: 'Montserrat', sans-serif;
   font-weight: bold;
   text-align: center;
+}
+
+.data-table {
+  margin: 5px 5px 150px 5px;
+}
+
+.progress-bar {
+  background-color: #fa8943;
 }
 
 .tool-title{
@@ -53,6 +64,7 @@ a, a:link, a:visited{
   font-family: 'Montserrat', sans-serif;
   font-weight: bold;
   font-size: 200%;
+  color: #454545;
 }
 
 .action-button {
@@ -66,11 +78,18 @@ a, a:link, a:visited{
 /* Coloring radio buttons and checkboxes */
 .shiny-bound-input {
   accent-color: #fa8943;
-  /* accent-color: #fa8943; */
 }
 
 /* Text linking to Data and Data Configuration tabs once data are ready */
-.data-prompt {
+.busy-message {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+.next-step-message {
+  font-family: 'Montserrat', sans-serif;
   font-weight: bold;
 }
 
@@ -108,7 +127,7 @@ a, a:link, a:visited{
 }
 
 .shiny-input-container {
-  margin-bottom: 10px;
+  margin-bottom:10px;
 }
 
 /* Main panel */
@@ -116,9 +135,10 @@ a, a:link, a:visited{
   margin-bottom: 100px;
 }
 
-.load-message{
+.busy-message{
   font-family: 'Montserrat', sans-serif;
   font-weight: bold;
+  font-size: 1.5em;
   text-align: center;
 }
 
@@ -139,13 +159,9 @@ a, a:link, a:visited{
 .navbar-default .navbar-nav > .active > a,
                              .navbar-default .navbar-nav > .active > a:focus {background-color:#fa8943 !important;
                              }
-/* .navbar-default .navbar-nav > .active > a,
-                             .navbar-default .navbar-nav > .active > a:focus {background-color:#fa8943 !important;
-                             } */
 
 /* Formatting for shiny containers */
 .info-btn {
-  /* background-color: #4f4f4f; */
   background-color: #454545;
   color: white;
   margin: auto;
@@ -154,7 +170,6 @@ a, a:link, a:visited{
 }
 
 .btn {
-  /* background-color: #4f4f4f; */
   background-color: #454545;
   color: white;
   vertical-align: middle;
@@ -199,7 +214,6 @@ a, a:link, a:visited{
           width: fit-content;
           max-width: calc(20%);
           opacity: 1;
-          /* background-color: #4f4f4f; */
           background-color: #454545;
           color: white;
           font-family: 'Montserrat', sans-serif;

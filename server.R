@@ -144,7 +144,7 @@ shinyServer(function(input, output, session) {
   output$polygons_done_ui <- renderUI(if (input$strataname != "") {
     tagList(br(),
             fluidRow(column(width = 10,
-                            p(class = "data-prompt",
+                            p(class = "next-step-message",
                               "Your polygons are ready! The next step is to check the configuration in the",
                               a("Point Allocation tab.",
                                 onclick = "tabJump('Point Allocation')")))))
@@ -153,7 +153,7 @@ shinyServer(function(input, output, session) {
   output$configuration_done_ui <- renderUI(if (req(!is.null(workspace$points))) {
     tagList(br(),
             fluidRow(column(width = 10,
-                            p(class = "data-prompt",
+                            p(class = "next-step-message",
                               "Your design is complete! Check it out and download the points in the",
                               a("Design tab.",
                                 onclick = "tabJump('Design')")))))
@@ -162,7 +162,7 @@ shinyServer(function(input, output, session) {
   output$no_polygons_yet_ui <- renderUI(if (req(is.null(workspace$polygons))) {
     tagList(br(),
             fluidRow(column(width = 10,
-                            p(class = "data-prompt",
+                            p(class = "next-step-message",
                               "You still need to upload polygons. Please do so in the",
                               a("Polygon Setup tab.",
                                 onclick = "tabJump('Polygon Setup')")))))
@@ -744,10 +744,10 @@ shinyServer(function(input, output, session) {
                  
                  # First let's make sure that things are ready for designing
                  proportional_inputs_ready <- !any(sapply(X = c(input$basecount,
-                                                               input$minbase,
-                                                               input$minoversample,
-                                                               input$minoversampleproportion),
-                                                         is.na))
+                                                                input$minbase,
+                                                                input$minoversample,
+                                                                input$minoversampleproportion),
+                                                          is.na))
                  
                  message(paste0("The proportional parameters currently are: ",
                                 paste0(sapply(X = c(input$basecount,
@@ -835,7 +835,7 @@ shinyServer(function(input, output, session) {
                      workspace$inputs <- setNames(workspace$inputs,
                                                   c(workspace$ui.lut$base, workspace$ui.lut$over))
                      
-                     manual_inputs_ready <- !any(sapply(X = workplace$inputs,
+                     manual_inputs_ready <- !any(sapply(X = workspace$inputs,
                                                         is.na))
                      
                      if (!manual_inputs_ready) {
@@ -891,10 +891,11 @@ shinyServer(function(input, output, session) {
                      minoversampleproportion <- input$minoversampleproportion
                      
                      design_inputs_ready <- !any(sapply(X = c(basecount,
-                                                             minbase,
-                                                             minoversample,
-                                                             minoversampleproportion),
-                                                       is.na))
+                                                              minbase,
+                                                              minoversample,
+                                                              minoversampleproportion),
+                                                        is.na))
+                     
                      if (!design_inputs_ready) {
                        showNotification(ui = paste0("Please make sure that you've specified values for all the design parameters."),
                                         duration = NULL,

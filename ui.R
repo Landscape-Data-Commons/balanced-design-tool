@@ -29,14 +29,44 @@ fluidPage(
     id = "navbar-full",
     position = "static-top",
     footer = tags$div(class = "footer",
-                      p(column(width = 4,
+                      p(column(width = 3,
                                p(a(href = 'mailto:nelson.stauffer@usda.gov',
                                    'Contact us with questions',
                                    target = "_blank"))),
-                        column(width = 8,
+                        # column(width = 8,
+                        #        align = "right",
+                        #        p(img(src = "combined_logos_hires.png",
+                        #              width = "95%"))))
+                        column(width = 9,
                                align = "right",
-                               p(img(src = "combined_logos_hires.png",
-                                     width = "60%"))))),
+                               class = "image-row",
+                               p(class = "logo",
+                                 a(href = "https://landscapedatacommons.org",
+                                   target = "blank",
+                                   img(src = "ldc_logo.png",
+                                       height = "60px"))),
+                               p(class = "logo",
+                                 a(href = "https://nrcs.usda.gov",
+                                   target = "blank",
+                                   img(src = "nrcs_logo.png",
+                                       height = "60px"))),
+                               p(class = "logo",
+                                 a(href = "https://blm.gov",
+                                   target = "blank",
+                                   img(src = "blm_logo.png",
+                                       height = "60px"))),
+                               p(class = "logo",
+                                 a(href = "https://jornada.nmsu.edu",
+                                   target = "blank",
+                                   img(src = "jer_logo.png",
+                                       height = "60px"))),
+                               p(class = "logo",
+                                 a(href = "https://ltar.ars.usda.gov/",
+                                   target = "blank",
+                                   img(src = "ltar_logo.png",
+                                       height = "60px"))))
+                      )
+    ),
     tabPanel(title = "Configuration",
              sidebarLayout(sidebarPanel = sidebarPanel(
                HTML(
@@ -181,7 +211,7 @@ fluidPage(
                    condition = "$('html').hasClass('shiny-busy')",
                    br(),
                    HTML(
-                     "<div class = 'load-message'><img src = 'busy_icon_complex.svg' height = '40rem'>Working! Please wait.<img src = 'busy_icon_complex.svg' height = '40rem'></div>"
+                     "<div class = 'busy-message'><img src = 'busy_icon_complex.svg' height = '40rem'>Working! Please wait.<img src = 'busy_icon_complex.svg' height = '40rem'></div>"
                    )
                  ),
                  fluidRow(column(width = 12,
