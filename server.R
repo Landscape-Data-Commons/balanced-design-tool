@@ -835,7 +835,7 @@ shinyServer(function(input, output, session) {
                      workspace$inputs <- setNames(workspace$inputs,
                                                   c(workspace$ui.lut$base, workspace$ui.lut$over))
                      
-                     manual_inputs_ready <- !any(sapply(X = workplace$inputs,
+                     manual_inputs_ready <- !any(sapply(X = workspace$inputs,
                                                         is.na))
                      
                      if (!manual_inputs_ready) {
