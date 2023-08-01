@@ -230,7 +230,7 @@ grts.custom <- function(design_object,
   
   sample_sites <- do.call(rbind,
                           points_list)
-  
+
   message(paste0("sample_sites class is: ",
                  paste(class(sample_sites),
                        collapse = ", ")))

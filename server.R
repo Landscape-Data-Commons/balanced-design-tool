@@ -895,6 +895,7 @@ shinyServer(function(input, output, session) {
                                                               minoversample,
                                                               minoversampleproportion),
                                                         is.na))
+                     
                      if (!design_inputs_ready) {
                        showNotification(ui = paste0("Please make sure that you've specified values for all the design parameters."),
                                         duration = NULL,

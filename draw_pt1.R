@@ -8,7 +8,7 @@
 
 ## If any of these are not installed, remove the hashes and run the relevant line:
 # install.packages("dplyr")
-# install.packages("rgdal")
+# install.packages("sf")
 # install.packages("spsurvey")
 # install.packages("stringr")
 
@@ -41,5 +41,5 @@ input.filepath <- "C:/Local/filepath/to/data"
 # The path to the folder to write out the resulting design into is:
 output.filepath <- "C:/Local/filepath/to/data"
 
-# The projection that the points should be returned in. NAD83 is the default for all Bureau of Land Management data
-projection <- sp::CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs")
+# The projection that the points should be returned in. Defaults to WGS84
+projection <- "+proj=longlat +datum=WGS84"

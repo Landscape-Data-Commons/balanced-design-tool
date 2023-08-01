@@ -8,7 +8,7 @@ output:
 
 This tool is a uses the implementation of the Generalized Random Tesselation Stratified (GRTS) algorithm from [spsurvey](https://cran.r-project.org/package=spsurvey) to draw spatially balanced sample designs.
 
-To report bugs, contact Nelson Stauffer at nelson.stauffer@ars.usda.gov or open an issue in the [GitHub repository](https://github.com/nstauffer/balanced-design-tool).
+To report bugs, contact Nelson Stauffer at nelson.stauffer@ars.usda.gov or open an issue in the [GitHub repository](https://github.com/landscape-data-commons/balanced-design-tool).
 
 The packages used are:
 

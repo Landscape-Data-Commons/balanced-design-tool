@@ -1,3 +1,5 @@
+nginx_conf
+*.conf
 .Rproj.user
 .Rhistory
 .RData
